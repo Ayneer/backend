@@ -37,7 +37,7 @@ passport.use(new estrategisLocal({
     /* Se verifica la existencia del cliente en la base de datos. */
     if(!cliente){
 
-       const administrador = await administrador.findOne({correo: correo});
+       const administrador = await Administrador.findOne({correo: correo});
 
        /*Si no existe un cliente, se busca entonces un administrador. */
         if(!administrador){
@@ -53,7 +53,7 @@ passport.use(new estrategisLocal({
                 return callBack(null, false, null);
 
             }else{
-                /* Existe el usuario y la contraseña es valida */
+                /* Existe el usuario administrador y la contraseña es valida */
                 return callBack(null, true, administrador);
 
             }
@@ -64,7 +64,7 @@ passport.use(new estrategisLocal({
             /*De no coincidir, no podrá iniciar sesion */
             return callBack(null, false, null);
         }else{
-            /* Existe el usuario y la contraseña es valida */
+            /* Existe el usuario cliente y la contraseña es valida */
             return callBack(null, true, cliente);
         }
     }

@@ -1,7 +1,6 @@
 {
   "name": "servidor_software",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js"
@@ -14,11 +13,21 @@
     "express": "^4.17.1",
     "express-session": "^1.16.2",
     "mongoose": "^5.6.9",
+    "package.json": "^2.0.1",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
     "socket.io": "^2.2.0"
   },
   "devDependencies": {
     "nodemon": "^1.19.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ayneer/backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Ayneer/backend/issues"
+  },
+  "homepage": "https://github.com/Ayneer/backend#readme",
+  "description": ""
 }

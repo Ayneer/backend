@@ -16,7 +16,7 @@ ControladorCliente.nuevoCliente = async (req, res)=>{
         nuevoCliente.telefono = req['telefono'];
         nuevoCliente.id_medidor = req['id_medidor'];
         nuevoCliente.limite = 0;
-        nuevoCliente.contraseña = "contraseñaAleatoria";
+        nuevoCliente.contraseña = bcrypt.hashSync(req['telefono'], bcrypt.genSaltSync(10));
         //Se almacena el nuevo cliente
         nuevoCliente.save((err)=>{
             if(err){
