@@ -5,7 +5,8 @@ const esquema_Administrador = new mongoose.Schema({
     apellido: { type: String },
     correo: { type: String },
     telefono: { type: Number },
-    contraseña: {type: String}
+    contraseña: {type: String},
+    admi: {type: Boolean}
 });
 
 module.exports = mongoose.model('Administradores', esquema_Administrador);

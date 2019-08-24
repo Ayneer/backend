@@ -19,16 +19,46 @@ rutas.get('/estoyAutenticado', (req, res)=>{
 
 
 /* CRUD CLIENTE */
-rutas.post('/registrarCliente', async (req, res)=>{
+rutas.post('/cliente', (req, res)=>{
     cCliente.nuevoCliente(req.body, res);
+});
+
+rutas.delete('/cliente/:correo', (req, res)=>{
+    cCliente.eliminarCliente(req.params.correo, res);
+});
+
+rutas.put('/cliente/:correo', (req, res)=>{
+    cCliente.actualizarCliente(req.params.correo, req.body, res);
 });
 
 rutas.get('/', (req, res)=>{
     res.send("hola");
-})
+});
+
+/* CRUD ADMINISTRADOR */
+rutas.post('/administrador', (req, res)=>{
+   // cCliente.nuevoCliente(req.body, res);
+});
+
+rutas.delete('/administrador/:correo', (req, res)=>{
+   // cCliente.eliminarCliente(req.params.correo, res);
+});
+
+rutas.put('/administrador/:correo', (req, res)=>{
+   // cCliente.actualizarCliente(req.params.correo, req.body, res);
+});
+
+rutas.get('/', (req, res)=>{
+    res.send("hola");
+});
 
 /* CRUD CONSUMO */
+
 /* Metodo que usa el medidor inteligente para enviar el consumo registrado */
+rutas.post('/consumno', (req, res)=>{
+//se usan los dos controladores, el de consumoReal e Historial.
+});
+
 rutas.post("/registrarConsumo", (req, res)=>{
     
     console.log(req.body);
