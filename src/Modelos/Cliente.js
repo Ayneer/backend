@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 
 const esquema_Cliente = new mongoose.Schema({
     nombre: { type: String },
-    apellido: { type: String },
+    apellidos: { type: String },
+    cedula: { type: Number },
     correo: { type: String },
     telefono: { type: Number },
     id_medidor: { type: Number },

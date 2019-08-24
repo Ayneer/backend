@@ -11,12 +11,13 @@ ControladorCliente.nuevoCliente = async (req, res) => {
         /* Si no existe el cliente, se podrá registrar */
         const nuevoCliente = new Cliente();
         nuevoCliente.nombre = req['nombre'];
-        nuevoCliente.apellido = req['apellido'];
+        nuevoCliente.apellidos = req['apellidos'];
         nuevoCliente.correo = req['correo'];
-        nuevoCliente.telefono = req['telefono'];
+        nuevoCliente.cedula = req['cedula'];
+        //nuevoCliente.telefono = req['telefono'];
         nuevoCliente.id_medidor = req['id_medidor'];
-        nuevoCliente.limite = 0;
-        nuevoCliente.contraseña = bcrypt.hashSync(req['telefono'], bcrypt.genSaltSync(10));
+        //nuevoCliente.limite = 0;
+        nuevoCliente.contraseña = bcrypt.hashSync(req['correo'], bcrypt.genSaltSync(10));
         //Se almacena el nuevo cliente
         nuevoCliente.save((err) => {
             if (err) {
@@ -33,47 +34,110 @@ ControladorCliente.nuevoCliente = async (req, res) => {
     }
 }
 
-ControladorCliente.eliminarCliente = async (correoR, res) => {
+ControladorCliente.eliminarCliente = async (correoR, res, correoUsuario) => {
 
-    await Cliente.findOneAndRemove({correo: correoR}, (error, cliente)=>{
-        if(error){
-            return res.status(500).send({ error: true, estado: false, mensaje: "Error #4 en el sistema, intente mas tarde." });
-        }else{
-            if(!cliente){
-                return res.status(401).send({ error: false, estado: false, mensaje: "No existe un cliente con el correo: " + correoR + " !" });
-            }else{
-                console.log('Eliminado!');
-                return res.status(200).send({ error: false, estado: true, mensaje: "Registro eliminado!" });
+    if (await Cliente.findOne({ correo: correoUsuario })) {
+        return res.status(401).send({ error: true, estado: false, mensaje: "Accion denegada!!" });
+    } else {
+        await Cliente.findOneAndRemove({ correo: correoR }, (error, cliente) => {
+            if (error) {
+                return res.status(500).send({ error: true, estado: false, mensaje: "Error #4 en el sistema, intente mas tarde." });
+            } else {
+                if (!cliente) {
+                    return res.status(401).send({ error: false, estado: false, mensaje: "No existe un cliente con el correo: " + correoR + " !" });
+                } else {
+                    console.log('Eliminado!');
+                    return res.status(200).send({ error: false, estado: true, mensaje: "Registro eliminado!" });
+                }
             }
-        }
-    });
+        });
+    }
+
+
 }
 
-ControladorCliente.actualizarCliente = async (correoR, req, res) => {
-    //Depende del usuario que va a modificar, si es Administrador
-    const actualizar = { 
-        nombre: req['nombre'], 
-        apellido: req['apellido'],
-        //correo : req['correo'],
-        //telefono : req['telefono'],
-        id_medidor : req['id_medidor'],
-        //limite : req['limite'],
-        /*contraseña : bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10))*/
-    };
+ControladorCliente.buscarCliente = async function (correoABuscar) {
+    console.log("hola");
+    const cliente = await Cliente.findOne({ correo: correoABuscar });
+    console.log("hola2");
+    if (cliente) {
+        return cliente;
+    } else {
+        return null;
+    }
+}
 
-    await Cliente.findOneAndUpdate({ correo: correoR }, actualizar, function (error, cliente) {
 
-        if (error) {
-            return res.status(500).send({ error: true, estado: false, mensaje: "Error #5 en el sistema, intente mas tarde." });
+ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
+    //Depende del usuario que va a hacer la modificación
+
+    /* Por parte del cliente el podrá modificar:
+    Correo, telefono, limite y contraseña.*/
+
+    /* Por parte del administrador el podrá recuperar la contraseña = modA1.
+    y/o modificar datos criticos (nombre, apellido, id_medidor y cedula) = modA2.
+ 
+    Para realizar un reestablecimiento de contraseña, el administrador 
+    debe enviar en el body, mod: modA1, contraseña: contraseña por defecto, adm: true.
+
+    Para actualizar los datos "criticos" el administrador debe 
+    enviar en el body de la peticion: mod: modA2, los campos a 
+    actualizar, adm: true.
+    */
+    const actualizacion = {};
+
+    if (await Cliente.findOne({ correo: usuario.correo })) {
+        /* Si entra, es porque el usuario que intenta actualizar a este
+        cliente es un mismo cliente. Ahora, un cliente se puede 
+        actualizar a si mismo, pero no a otro. */
+        if (correoR === usuario.correo) {
+            /* Todo ok, el cliente puede modificar */
+            if (!req['contraseña'] === null) {
+                //Cambio la contraseña
+                actualizacion.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
+            }
+            actualizacion.correo = req['correo'];
+            actualizacion.telefono = req['telefono'];
+            actualizacion.limite = req['limite'];
         } else {
-            if (!cliente) {
-                return res.status(401).send({ error: false, estado: false, mensaje: "No existe un cliente con el correo: " + correoR + " !" });
+            /* Intentan hackear al servidor. */
+            return res.status(401).send({ error: true, estado: false, mensaje: "Accion denegada!!" });
+        }
+    } else {
+        //Si no es un cliente y esta correctamente autenticado, entonces debe ser un administrador.
+        if (req['mod'] === "modA1") {
+            //Recuperar contraseña 
+            actualizacion.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
+        } else {
+            if (req['mod'] === "modA2") {
+                //Actualizar datos criticos
+                actualizacion.nombre = req['nombre'];
+                actualizacion.apellido = req['apellido'];
+                actualizacion.cedula = req['cedula'];
+                actualizacion.id_medidor = req['id_medidor'];
             } else {
-                console.log('Actualizado!');
-                return res.status(200).send({ error: false, estado: true, mensaje: "Registro actualizado!" });
+                return res.status(401).send({ error: true, estado: false, mensaje: "Accion desconocida!" });
             }
         }
-    });
+    }
+    if (correoR != null) {
+        await Cliente.findOneAndUpdate({ correo: correoR }, actualizacion, function (error, cliente) {
+
+            if (error) {
+                return res.status(500).send({ error: true, estado: false, mensaje: "Error #5 en el sistema, intente mas tarde." });
+            } else {
+                if (!cliente) {
+                    return res.status(401).send({ error: false, estado: false, mensaje: "No existe un cliente con el correo: " + correoR + " !" });
+                } else {
+                    console.log('Actualizado!');
+                    return res.status(200).send({ error: false, estado: true, mensaje: "Registro actualizado!" });
+                }
+            }
+        });
+    } else {
+        return res.status(401).send({ error: true, estado: false, mensaje: "A quien voy a modificar? Debes darme un correo." });
+    }
+
 }
 
 module.exports = ControladorCliente;

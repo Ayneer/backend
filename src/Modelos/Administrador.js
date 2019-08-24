@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const esquema_Administrador = new mongoose.Schema({
     nombre: { type: String },
-    apellido: { type: String },
+    apellidos: { type: String },
     correo: { type: String },
     telefono: { type: Number },
     contraseña: {type: String},
