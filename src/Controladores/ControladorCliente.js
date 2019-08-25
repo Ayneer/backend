@@ -56,17 +56,13 @@ ControladorCliente.eliminarCliente = async (correoR, res, correoUsuario) => {
 
 }
 
-ControladorCliente.buscarCliente = async function (correoABuscar) {
-    console.log("hola");
-    const cliente = await Cliente.findOne({ correo: correoABuscar });
-    console.log("hola2");
-    if (cliente) {
-        return cliente;
-    } else {
-        return null;
-    }
+ControladorCliente.buscarClienteCorreo = function (correoABuscar) {
+    return Cliente.findOne({ correo: correoABuscar });
 }
 
+ControladorCliente.buscarClienteMedidor = function (IdMedidor) {
+    return Cliente.findOne({ id_medidor: IdMedidor });
+}
 
 ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
     //Depende del usuario que va a hacer la modificación

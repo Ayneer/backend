@@ -2,49 +2,111 @@ const UltimoConsumo = require('../Modelos/UltimoConsumo');
 
 const ControladorUltimoConsumo = {};
 
-ControladorUltimoConsumo.enviarUltimoConsumo = function (_id_cliente) {
+ControladorUltimoConsumo.enviarUltimoConsumo = function (correo_cliente, res, ultimoConsumo, req) {
     /* ¿El cliente que le corresponde este consumo esta activo? */
     const clientesActivos = req.app.get('clientesActivos');
 
-    clientesActivos.forEach((cliente) => {
+    if (clientesActivos.length === 0) {
 
-        /* Si esta activo, le emitimos su consumo */
-        if (cliente['idCliente'] === _id_cliente) {
+        res.status(401).send({ error: false, estado: false, mensaje: "No se encuentra activo el cliente." });
 
-            const io = req.app.get('socketio');
+    } else {
 
-            io.to(cliente['idSocket']).emit('consumoReal', consumoReal);
+        var cont = 0;
 
+        clientesActivos.forEach((cliente) => {
+            /* Si esta activo, le emitimos su consumo */
+            if (cliente['correo_cliente'] === correo_cliente) {
+
+                cont = cont + 1;
+
+                const io = req.app.get('socketio');
+
+                io.to(cliente['idSocketCliente']).emit('consumoReal', ultimoConsumo);
+
+                res.send({ mensaje: "Consumo enviado al cliente" });
+            }
+
+        });
+
+        if (cont === 0) {
+            res.status(401).send({ error: false, estado: false, mensaje: "No se encuentra activo el cliente." });
         }
-
-    });
-}
-
-ControladorUltimoConsumo.registratUltimoConsumo = function (req, _id_cliente, res) {
-    //Se recibe un consumo real, No total.
-
-    //La fecha del consumo de llegada, no debe ser mayor a la actual
-    //La fecha del consumo de llegada, no debe ser menor a la actual
-    //La fecha como tal debe ser igual a la actual
-    //Pero la hora puede ser solo menor a la actual
-    //Eso por el tiempo de conexion a internet y mientras se envia.
-
-    //Se busca si existe un consumo anterior
-    if (true) {
-        //Si existe un consumo anterior, se compara las fechas
-        //Porque se supone que se va a mostrar el consumo actual del mes
-        //Si estan en el mismo mes, se suman. Si el mes que indica
-        //el consumo encontrado es menor al llegado, se actualiza el 
-        //valor del encontrado por el llegado.
-
-        //El resultado se le envia al cliente
-        this.enviarUltimoConsumo(_id_cliente);
-        
-    } else {//No existe un consumo anterior, es decir, es el primer.
-        const ultimoConsumo = new UltimoConsumo({ consumo, id_medidor, fecha_consumo });
-        ultimoConsumo.save();
     }
 
+
+}
+
+ControladorUltimoConsumo.buscarUltimoConsumo = function (idMedidor) {
+    return UltimoConsumo.findOne({ id_medidor: idMedidor });
+}
+
+ControladorUltimoConsumo.registratUltimoConsumo = async function (body, correoCliente, res, req) {
+    //Lo primero es saber si es primera vez que se guarda un consumo real.
+    const consumoReal = await UltimoConsumo.findOne({ id_medidor: body['id_medidor'] });
+
+    if (!consumoReal) {//Se valida la fecha y listo.
+        const fechaActual = new Date();
+        //Diferencia en horas.
+        if ((fechaActual - body['fecha']) > 24 || (fechaActual - body['fecha']) < 0 || body['consumo'] < 0) {
+            //No se debe retardar por mas de 5 segundos o inclusio milisegundos.
+            //Si el retardo es mas de 5 mininutos implementar otra solución.
+            return false;
+        } else {
+            const nuevoConsumoReal = new UltimoConsumo();
+            nuevoConsumoReal.fecha = body['fecha'];
+            nuevoConsumoReal.consumo = body['consumo'];
+            nuevoConsumoReal.id_medidor = bodu['id_medidor'];
+            nuevoConsumoReal.save((error) => {
+                if (error) {
+                    return false;
+                } else {
+                    console.log('Guardado!');
+                    return true;
+                }
+            });
+
+        }
+    } else {//Se validan los datos con los ya guardados.
+        if (body['fecha'] === consumoReal.fecha || body['fecha'] < consumoReal.fecha || body['consumo'] < consumoReal.consumo) {
+            return false;
+        } else {
+            const resta = body['fecha'].getMonth() - consumoReal.fecha.getMonth();
+            const consumo = 0;
+            if(resta === 0){
+                consumo = body['consumo'] - consumoReal.consumo;
+            }else{
+                if(resta > 0){
+                    consumo = body['consumo'];
+                }
+            }
+            const actualizacion = {
+                fecha: body['fecha'],
+                consumo: consumo,
+                id_medidor: body['id_medidor']
+            }
+            await UltimoConsumo.findOneAndUpdate({ id_medidor: body['id_medidor'] }, actualizacion, function (error) {
+
+                if (error) {
+
+                    return false;
+
+                } else {
+
+                    console.log('Actualizado!');
+                    return true;
+
+                }
+            });
+        }
+
+    }
+
+}
+
+ControladorUltimoConsumo.ultimoConsumo = function (id_medidor) {
+    //Busqueda y retorno del ultimo consumo guardado del idMedidor pasado.
+    return UltimoConsumo.findOne({ id_medidor: id_medidor });
 }
 
 module.exports = ControladorUltimoConsumo;
