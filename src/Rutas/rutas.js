@@ -1,10 +1,12 @@
 const express = require('express');
 const rutas = express.Router();
 
+//Controladores
 const cAutenticacion = require('../Controladores/ControladorAutenticacion');
 const cAdministrador = require('../Controladores/ControladorAdministrador');
 const Administrador = require('../Modelos/Administrador');
 const cCliente = require('../Controladores/ControladorCliente');
+const cUConsumo = require('../Controladores/ControladorUltimoConsumo');
 
 /* SESION */
 rutas.post('/iniciarSesion', (req, res, next) => {
@@ -93,29 +95,17 @@ rutas.put('/administrador/:correo', (req, res) => {
 /* Metodo que usa el medidor inteligente para enviar el consumo registrado */
 rutas.post('/consumno', (req, res) => {
     //se usan los dos controladores, el de consumoReal e Historial.
+    //Buscar cliente con el id_medidor que llega.
+    const _id_cliente;
+    if(true){//si existe el cliente si registra el consumo.
+        cUConsumo.registratUltimoConsumo(req.body, _id_cliente, res);
+        res.status(200).send("consumo enviado al servidor con exito!");
+    }else{
+        //Si no existe el cliente, no se registra el consumo.
+    }
+    
+    
 });
 
-rutas.post("/registrarConsumo", (req, res) => {
-
-    console.log(req.body);
-    /* Validar fecha y ID del consumo recibido */
-
-    /* Registrar consumo en la colección ultimoConsumo */
-    db.registrarUltimoConsumo('300', '2', '16/08/2019');
-
-    /* ¿El cliente que le corresponde este consumo esta activo? */
-    db.clientesActivos.forEach((cliente) => {
-
-        /* Si esta activo, le emitimos su consumo */
-        if (cliente['idCliente'] === req.body['idCliente']) {
-
-            io.to(cliente['idSocket']).emit('consumoReal', req.body['consumo']);
-
-        }
-
-    });
-
-    res.status(200).send("consumo enviado al servidor con exito!");
-});
 
 module.exports = rutas;

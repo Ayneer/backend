@@ -112,7 +112,7 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
             if (req['mod'] === "modA2") {
                 //Actualizar datos criticos
                 actualizacion.nombre = req['nombre'];
-                actualizacion.apellido = req['apellido'];
+                actualizacion.apellidos = req['apellido'];
                 actualizacion.cedula = req['cedula'];
                 actualizacion.id_medidor = req['id_medidor'];
             } else {

@@ -12,6 +12,8 @@ require('./src/baseDatos/conexion');
 require('./src/Autenticacion/autenticacion');
 
 app.set('puerto', process.env.PORT || 3500);
+app.set('socketio', io);
+app.set('clientesActivos', clientesActivos);
 
 app.use(bodyParse.urlencoded({extended:false}));
 app.use(express.json());
@@ -36,11 +38,12 @@ io.on('connection', function (clienteSocket) {
     console.log('nuevo cliente conectado');
 
     /* El socketCliente puede solicitar conocer su consumo real. */
-    clienteSocket.on('consumoRealServidor', () => {
-
+    clienteSocket.on('consumoRealServidor', (_idCliente) => {
+        console.log('hola from server.');
         /* Se almacena el cliente en una lista de los activos */
         clientesActivos.push({ idCliente: _idCliente, idSocket: clienteSocket.id });
-        console.log('clientes activos: ', clientesActivos);
+        app.set('clientesActivos', clientesActivos);
+        console.log('clientes activos: ', app.get('clientesActivos'));
 
         /* Emitir su ultimo consumo registrado por el medidor,
         mediante el controlador de ultimo consumo */
