@@ -57,11 +57,13 @@ ControladorUltimoConsumo.registratUltimoConsumo = async function (body, correoCl
             nuevoConsumoReal.fecha = body['fecha'];
             nuevoConsumoReal.consumo = body['consumo'];
             nuevoConsumoReal.id_medidor = bodu['id_medidor'];
+            nuevoConsumoReal.totalConsumo = body['consumo'];
             nuevoConsumoReal.save((error) => {
                 if (error) {
                     return false;
                 } else {
                     console.log('Guardado!');
+                    //parete del historial y envio del consumo al cliente
                     return true;
                 }
             });
@@ -77,13 +79,14 @@ ControladorUltimoConsumo.registratUltimoConsumo = async function (body, correoCl
                 consumo = body['consumo'] - consumoReal.consumo;
             }else{
                 if(resta > 0){
-                    consumo = body['consumo'];
+                    consumo = consumoReal.totalConsumo - body['consumo'];
                 }
             }
             const actualizacion = {
                 fecha: body['fecha'],
                 consumo: consumo,
-                id_medidor: body['id_medidor']
+                id_medidor: body['id_medidor'],
+                totalConsumo: body['consumo']
             }
             await UltimoConsumo.findOneAndUpdate({ id_medidor: body['id_medidor'] }, actualizacion, function (error) {
 
@@ -94,6 +97,7 @@ ControladorUltimoConsumo.registratUltimoConsumo = async function (body, correoCl
                 } else {
 
                     console.log('Actualizado!');
+                    //parete del historial y envio del consumo al cliente
                     return true;
 
                 }

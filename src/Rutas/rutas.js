@@ -115,6 +115,7 @@ rutas.get('/consumo/:correo', async (req, res) => {
     if (cAutenticacion.estoyAutenticado(req)) {
         //Se valida que el correo que solicita conocer el consumo real es el mismo del logueado
         if (req.user.correo === req.params.correo) {
+            //Metodo que busca el ultimo consumo de un medidor.
             const ultimoConsumo = await cUConsumo.ultimoConsumo(req.user.id_medidor);
             if (ultimoConsumo) {
                 res.status(200).send({ error: false, estado: true, mensaje: ultimoConsumo });
