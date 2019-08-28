@@ -1,3 +1,4 @@
+//Import de componentes y tecnologias necesarias
 const express = require('express');
 const bodyParse = require('body-parser');
 const app = express();
@@ -7,16 +8,22 @@ const rutas = require('./src/Rutas/rutas');
 const passport = require('passport');
 const session = require('express-session');
 
-const clientesActivos = [];
-const Cliente = require('./src/Modelos/Cliente');
+//Controlador
+const cCliente = require('./src/Controladores/ControladorCliente');
 
+//Clientes activos para recibir su consumo
+const clientesActivos = [];
+
+//Archivos para la conexion y la autenticacion
 require('./src/baseDatos/conexion');
 require('./src/Autenticacion/autenticacion');
 
+//Configuracion de variables
 app.set('puerto', process.env.PORT || 3500);
 app.set('socketio', io);
 app.set('clientesActivos', clientesActivos);
 
+//Configuracion de middleware
 app.use(bodyParse.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(session({
@@ -39,7 +46,6 @@ app.use((req, res, next) => {
 /* Cargamos las rutas definidas. */
 app.use('/', rutas);
 
-
 //Se habilita el socket
 /* Se detecta la conexion de un socketCliente. */
 io.on('connection', function (clienteSocket) {
@@ -48,8 +54,8 @@ io.on('connection', function (clienteSocket) {
 
     /*Se suscribe el cliente al la lista de clientes activos */
     clienteSocket.on('mi_correo', async (mi_correo) => {
-
-        if(await Cliente.findOne({correo: mi_correo})){
+        
+        if(await cCliente.buscarClienteCorreo(mi_correo)){
 
             app.get('clientesActivos').push({correo_cliente: mi_correo, idSocketCliente: clienteSocket.id });
             app.set('clientesActivos', app.get('clientesActivos'));
@@ -75,7 +81,7 @@ io.on('connection', function (clienteSocket) {
 
 });
 
-
+//Se activa el servidor
 http.listen(app.get('puerto'), () => {
     console.log('escuchando en http://localhost:', app.get('puerto'));
 });

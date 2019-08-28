@@ -74,11 +74,11 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
     y/o modificar datos criticos (nombre, apellido, id_medidor y cedula) = modA2.
  
     Para realizar un reestablecimiento de contraseña, el administrador 
-    debe enviar en el body, mod: modA1, contraseña: contraseña por defecto, adm: true.
+    debe enviar en el body, mod: modA1, contraseña: contraseña por defecto.
 
     Para actualizar los datos "criticos" el administrador debe 
     enviar en el body de la peticion: mod: modA2, los campos a 
-    actualizar, adm: true.
+    actualizar.
     */
     const actualizacion = {};
 

@@ -5,9 +5,7 @@ const rutas = express.Router();
 const cAutenticacion = require('../Controladores/ControladorAutenticacion');
 const cAdministrador = require('../Controladores/ControladorAdministrador');
 const cCliente = require('../Controladores/ControladorCliente');
-const cUConsumo = require('../Controladores/ControladorUltimoConsumo');
-
-const Administrador = require('../Modelos/Administrador');
+const cConsumo = require('../Controladores/ControladorConsumo');
 
 /* SESION */
 rutas.post('/iniciarSesion', (req, res, next) => {
@@ -39,8 +37,8 @@ rutas.get('/estoyAutenticado', (req, res) => {
 rutas.post('/cliente', async (req, res) => {
 
     if (cAutenticacion.estoyAutenticado(req)) {
-
-        const esAdministrador = await Administrador.findOne({ correo: req.user.correo });
+        
+        const esAdministrador = await cAdministrador.buscarAdministradorCorreo(req.user.correo);
 
         if (esAdministrador) {//Si es un administrador, podrá realizar el registro
             cCliente.nuevoCliente(req.body, res);
@@ -101,10 +99,10 @@ rutas.post('/consumo', async (req, res) => {
         
     if (cliente) {//si existe el cliente si registra el consumo.
         const correo = cliente.correo;//Para saber a quien enviar el consumo por socket
-        cUConsumo.registratUltimoConsumo(req.body, correo, res, req);
+        cConsumo.registrarConsumoReal(req.body, correo, res, req);
     } else {
         //Si no existe el cliente, no se registra el consumo.
-        res.status(401).send({ error: true, estado: false, mensaje: "No existe el cliente para este id de medidor." });
+        res.send({ error: true, estado: false, mensaje: "No existe el cliente para este id de medidor." });
     }
 });
 
@@ -116,14 +114,12 @@ rutas.get('/consumo/:correo', async (req, res) => {
         //Se valida que el correo que solicita conocer el consumo real es el mismo del logueado
         if (req.user.correo === req.params.correo) {
             //Metodo que busca el ultimo consumo de un medidor.
-            const ultimoConsumo = await cUConsumo.ultimoConsumo(req.user.id_medidor);
-            if (ultimoConsumo) {
-                res.status(200).send({ error: false, estado: true, mensaje: ultimoConsumo });
+            const ConsumoReal = await cConsumo.consumoReal(req.user.id_medidor);
+            if (ConsumoReal) {
+                res.status(200).send({ error: false, estado: true, mensaje: ConsumoReal });
             } else {
                 res.status(200).send({ error: false, estado: false, mensaje: "Aun no existen datos de consumo. Verifica el funcionamineto del medidor." });
             }
-
-            /*cUConsumo.enviarUltimoConsumo(req.params.correo, res, ultimoConsumo.consumo, req);*/
         }
     }
 

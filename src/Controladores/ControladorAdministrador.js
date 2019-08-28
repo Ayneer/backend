@@ -89,4 +89,9 @@ ControladorAdministrador.actualizarAdministrador = async (correoR, req, res) => 
 
 }
 
+
+ControladorAdministrador.buscarAdministradorCorreo = function (correoABuscar) {
+    return Administrador.findOne({ correo: correoABuscar });
+}
+
 module.exports = ControladorAdministrador;
