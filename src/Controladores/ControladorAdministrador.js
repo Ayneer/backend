@@ -13,13 +13,12 @@ ControladorAdministrador.nuevoAdministrador = async (req, res) => {
         nuevoAdministrador.nombre = req['nombre'];
         nuevoAdministrador.apellidos = req['apellidos'];
         nuevoAdministrador.correo = req['correo'];
-        nuevoAdministrador.telefono = req['telefono'];
         nuevoAdministrador.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
         //Se almacena el nuevo administrador
         nuevoAdministrador.save((err) => {
             if (err) {
                 console.log('error al registrar: ', err);
-                return res.status(500).send({ error: true, estado: false, mensaje: "Error #6 en el sistema, intente mas tarde." });
+                return res.status(500).send({ error: true, estado: false, mensaje: "Debe completar todos los campos." });
             } else {
                 console.log('registrado!');
                 return res.status(200).send({ error: false, estado: true, mensaje: "Registro exitoso del administrador!" });
