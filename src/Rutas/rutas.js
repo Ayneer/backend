@@ -37,7 +37,7 @@ rutas.get('/estoyAutenticado', (req, res) => {
 rutas.post('/cliente', async (req, res) => {
 
     if (cAutenticacion.estoyAutenticado(req)) {
-        
+
         const esAdministrador = await cAdministrador.buscarAdministradorCorreo(req.user.correo);
 
         if (esAdministrador) {//Si es un administrador, podrá realizar el registro
@@ -96,7 +96,7 @@ rutas.post('/consumo', async (req, res) => {
     //se usan los dos controladores, el de consumoReal e Historial.
     //Buscar cliente con el id_medidor que llega.
     const cliente = await cCliente.buscarClienteMedidor(req.body['id_medidor']);
-        
+
     if (cliente) {//si existe el cliente si registra el consumo.
         const correo = cliente.correo;//Para saber a quien enviar el consumo por socket
         cConsumo.registrarConsumoReal(req.body, correo, res, req);
@@ -116,14 +116,46 @@ rutas.get('/consumo/:correo', async (req, res) => {
             //Metodo que busca el ultimo consumo de un medidor.
             const ConsumoReal = await cConsumo.consumoReal(req.user.id_medidor);
             if (ConsumoReal) {
+
                 res.status(200).send({ error: false, estado: true, mensaje: ConsumoReal });
+
             } else {
+
                 res.status(200).send({ error: false, estado: false, mensaje: "Aun no existen datos de consumo. Verifica el funcionamineto del medidor." });
             }
         }
+    } else {
+        res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
     }
 
 });
 
+rutas.get('/ex', (req, res) => {
+    // const f = new Date();
+    // console.log("hora rara: ", f);
+    // const h = f.toLocaleString('en-us', { hour12: true });
+    // console.log("Convercion a hora local: ", h);
+    // const f2 = new Date(h);// 8/28/2019, 13:10:40 PM
+    // var hora = f2.getHours();
+    // if(hora>12){
+    //     hora = hora - 12;
+    // }else{
+    //     if(hora === 0){
+    //         hora = 12;
+    //     }
+    // }
+    // console.log(hora);
+    // console.log("Convercion a hora rara: ", f2);
+    // const f3 = f2.toLocaleString('en-us', { hour12: true });
+    // console.log('De nuevo la convierto a la local', f3);
+
+    // const cadena = "8/28/2019, 12:33:24 PM";
+    // const arregloFecha = cadena.split(",");
+    // console.log(arregloFecha[0]);
+    // const arregloHora = arregloFecha[1].split(" ");
+    // console.log(arregloHora[2]);
+
+    res.send("listo");
+});
 
 module.exports = rutas;

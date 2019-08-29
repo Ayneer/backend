@@ -5,9 +5,9 @@ const esquema_Historial = new mongoose.Schema({
     consumoMañana: { type: Number },
     consumoTarde: { type: Number },
     consumoNoche: { type: Number },
-    costoUnitarioKwh: { type: Number },
-    fecha: { type: Date, required: true },
+    costoUnitarioKwh: { type: Number, required: true },
+    fecha: { type: String, required: true },
     id_medidor: { type: Number, required: true }
 });
 
-module.exports = mongoose.model('hostorial', esquema_Historial);
+module.exports = mongoose.model('historiales', esquema_Historial);
