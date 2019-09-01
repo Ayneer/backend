@@ -106,7 +106,8 @@ rutas.get('/clientes/:correo', async (req, res) => {
     }
 });
 
-/* CRUD ADMINISTRADOR */
+
+/* CRUD ADMINISTRADOR  Y SISTEMA*/
 rutas.post('/administrador', (req, res) => {
     cAdministrador.nuevoAdministrador(req.body, res);
 });
@@ -119,6 +120,21 @@ rutas.put('/administrador/:correo', (req, res) => {
     cAdministrador.actualizarAdministrador(req.params.correo, req.body, res);
 });
 
+rutas.put('/sistema', async (req, res) => {
+    if (cAutenticacion.estoyAutenticado(req)) {
+        const administrador = await cAdministrador.buscarAdministradorCorreo(req.user.correo);
+        if (administrador) {//Si es un administrador, entonces puede actualizar el costo unitario.
+            cAdministrador.definirCostoUnitario(req.body['costoUnitario'], res);
+        } else {
+            res.status(403).send({ error: false, estado: false, mensaje: "Accion denegada." });
+        }
+    } else {
+        res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
+    }
+    
+});
+
+
 /* CRUD CONSUMO */
 
 /* Metodo que usa el medidor inteligente para enviar el consumo registrado */
@@ -129,7 +145,9 @@ rutas.post('/consumo', async (req, res) => {
 
     if (cliente) {//si existe el cliente si registra el consumo.
         const correo = cliente.correo;//Para saber a quien enviar el consumo por socket
-        cConsumo.registrarConsumoReal(req.body, correo, res, req);
+        //Se consulta el costo unitario
+        const costoU = await cAdministrador.costoUnitario();
+        cConsumo.registrarConsumoReal(req.body, correo, res, req, costoU.costoUnitario);
     } else {
         //Si no existe el cliente, no se registra el consumo.
         res.send({ error: true, estado: false, mensaje: "No existe el cliente para este id de medidor." });

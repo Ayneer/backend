@@ -42,7 +42,7 @@ ControladorConsumo.buscarConsumoReal = function (idMedidor) {
     return ConsumoReal.findOne({ id_medidor: idMedidor });
 }
 
-ControladorConsumo.registrarConsumoReal = async function (body, correoCliente, res, req) {
+ControladorConsumo.registrarConsumoReal = async function (body, correoCliente, res, req, costoU) {
     //Lo primero es saber si es primera vez que se guarda un consumo real para el id de medidor.
     const consumoReal = await ConsumoReal.findOne({ id_medidor: body['id_medidor'] });
     
@@ -78,7 +78,7 @@ ControladorConsumo.registrarConsumoReal = async function (body, correoCliente, r
                 if (error) {
                     return res.send('Error al guardar el consumo');
                 } else {
-                    this.registrarConsumoHistorial(nuevoConsumoReal, 100, res, correoCliente, req);
+                    this.registrarConsumoHistorial(nuevoConsumoReal, costoU, res, correoCliente, req);
                 }
             });
 
@@ -99,7 +99,12 @@ ControladorConsumo.registrarConsumoReal = async function (body, correoCliente, r
             //Para saber si estoy o no en el mismo mes.
             const resta = (fechaMedidor.getMonth() + 1) - (fechaConsumoGuardado.getMonth() + 1);
 
+            console.log("resta: ",(fechaMedidor.getMonth() + 1)," - ",(fechaConsumoGuardado.getMonth() + 1));
+
             if (resta > 0) {//Inicio de nuevo mes
+                
+                console.log("nuevo mes!");
+
                 /*  consumoReal.totalConsumo = Total de consumo de los meses anteriores. */
                 if (consumoReal.totalConsumo === 0) {//A penas segundo mes de consumo
                     consumoReal.totalConsumo = consumoReal.consumoMes;
@@ -130,7 +135,7 @@ ControladorConsumo.registrarConsumoReal = async function (body, correoCliente, r
 
             if (cont === 0) {
                 //Registramos el consumoReal en el historial.
-                this.registrarConsumoHistorial(consumoReal, 100, res, correoCliente, req);
+                this.registrarConsumoHistorial(consumoReal, costoU, res, correoCliente, req);
             }
 
         }

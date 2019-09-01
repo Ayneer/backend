@@ -1,4 +1,5 @@
 const Administrador = require('../Modelos/Administrador');
+const Sistema = require('../Modelos/Sistema');
 const bcrypt = require('bcrypt-nodejs');
 
 const ControladorAdministrador = {};
@@ -88,9 +89,21 @@ ControladorAdministrador.actualizarAdministrador = async (correoR, req, res) => 
 
 }
 
-
 ControladorAdministrador.buscarAdministradorCorreo = function (correoABuscar) {
     return Administrador.findOne({ correo: correoABuscar });
 }
 
+ControladorAdministrador.definirCostoUnitario = async function (nuevoCosto, res) {
+    await Sistema.updateMany({}, { $set: { costoUnitario: nuevoCosto } }, (error) => {
+        if (error) {
+            return res.status(500).send({ error: true, estado: false, mensaje: "Error al guardar el costo" });
+        } else {
+            return res.status(200).send({ error: false, estado: true, mensaje: "Nuevo costo guardado" });
+        }
+    });
+}
+
+ControladorAdministrador.costoUnitario = function(){
+    return Sistema.find({});
+}
 module.exports = ControladorAdministrador;
