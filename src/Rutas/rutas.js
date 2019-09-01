@@ -131,10 +131,11 @@ rutas.get('/consumo/:correo', async (req, res) => {
 });
 
 rutas.get('/ex', (req, res) => {
-    // const f = new Date();
-    // console.log("hora rara: ", f);
-    // const h = f.toLocaleString('en-us', { hour12: true });
-    // console.log("Convercion a hora local: ", h);
+    const f = new Date();
+    console.log("fecha rara: ", f);
+    console.log("mes de fecha rara: ", f.getMonth());
+    const h = f.toLocaleString('en-us', { hour12: true });
+    console.log("Convercion a hora local: ", h);
     // const f2 = new Date(h);// 8/28/2019, 13:10:40 PM
     // var hora = f2.getHours();
     // if(hora>12){
@@ -154,6 +155,15 @@ rutas.get('/ex', (req, res) => {
     // console.log(arregloFecha[0]);
     // const arregloHora = arregloFecha[1].split(" ");
     // console.log(arregloHora[2]);
+
+    let mesHayer = new Date("8/25/2019, 8:50:25 PM").getMonth();
+    console.log("mes del historial: ", mesHayer+1);
+
+    const fechaMedidor = new Date("9/1/2019, 6:55:25 AM");
+    const fechaServidor = new Date();
+    console.log(fechaMedidor);
+    let fe = new Date().toLocaleString('en-us', { hour12: true });
+    console.log(new Date(fe));
 
     res.send("listo");
 });
