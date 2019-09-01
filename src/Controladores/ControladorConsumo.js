@@ -461,4 +461,8 @@ ControladorConsumo.nuevoHistorial = function (consumoReal, historialAyer, costoU
     }
 }
 
+ControladorConsumo.buscarHistorial = function (id_medidor){
+    return Historial.find({id_medidor: id_medidor});
+}
+
 module.exports = ControladorConsumo;

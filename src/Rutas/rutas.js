@@ -68,12 +68,42 @@ rutas.put('/cliente/:correo', (req, res) => {
     }
 });
 
-rutas.get('/clientes', (req, res) => {
-    res.send("esto es debe listar a todos los clientes!");
+rutas.get('/clientes', async (req, res) => {
+    if (cAutenticacion.estoyAutenticado(req)) {
+        const administrador = await cAdministrador.buscarAdministradorCorreo(req.user.correo);
+        if (administrador) {//Si es un administrador, entonces puede ver a todos los clientes.
+            const clientes = await cCliente.buscarClientes();
+            if (clientes) {
+                res.status(200).send({ error: false, estado: true, mensaje: "Lista de clientes.", clientes: clientes });
+            } else {
+                res.status(404).send({ error: false, estado: false, mensaje: "Lista de clientes vacia." });
+            }
+        } else {
+            res.status(403).send({ error: false, estado: false, mensaje: "Accion denegada." });
+        }
+    } else {
+        res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
+    }
 });
 
-rutas.get('/clientes/:correo', (req, res) => {
-    res.send("esto es debe listar a un cliente!");
+rutas.get('/clientes/:correo', async (req, res) => {
+    if (cAutenticacion.estoyAutenticado(req)) {
+        //Se valida que el correo que solicita conocer el historial es el mismo del logueado
+        const admin = await cAdministrador.buscarAdministradorCorreo(req.user.correo);
+        if (admin) {
+            //Se verifica que exista el cliente
+            const cliente = await cCliente.buscarClienteCorreo(req.params.correo);
+            if (cliente) {
+                res.status(200).send({ error: false, estado: true, mensaje: "Cliente encontrado.", cliente: cliente });
+            } else {
+                res.status(404).send({ error: false, estado: false, mensaje: 'No existe el cliente con el correo ' + req.params.correo });
+            }
+        } else {
+            res.status(403).send({ error: false, estado: false, mensaje: "Accion denegada." });
+        }
+    } else {
+        res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
+    }
 });
 
 /* CRUD ADMINISTRADOR */
@@ -130,6 +160,33 @@ rutas.get('/consumo/:correo', async (req, res) => {
 
 });
 
+/* CRUD HISTORIAL */
+
+//Petición realizada por un cliente para conocer su historial
+rutas.get('/historial/:correo', async (req, res) => {
+    if (cAutenticacion.estoyAutenticado(req)) {
+        //Se valida que el correo que solicita conocer el historial es el mismo del logueado
+        if (req.user.correo === req.params.correo) {
+            //Se verifica que sea un cliente
+            const cliente = await cCliente.buscarClienteCorreo(req.user.correo);
+            if (cliente) {
+                const historial = await cConsumo.buscarHistorial(cliente.id_medidor);
+                if (historial) {
+                    res.status(200).send({ error: false, estado: true, mensaje: "Historial(es) del cliente encontrado.", historial: historial });
+                } else {
+                    res.status(404).send({ error: false, estado: false, mensaje: "No existe aun historial." });
+                }
+            } else {
+                res.status(403).send({ error: false, estado: false, mensaje: "Accion denegada." });
+            }
+        } else {
+            res.status(403).send({ error: false, estado: false, mensaje: "Accion denegada." });
+        }
+    } else {
+        res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
+    }
+});
+
 rutas.get('/ex', (req, res) => {
     const f = new Date();
     console.log("fecha rara: ", f);
@@ -157,7 +214,7 @@ rutas.get('/ex', (req, res) => {
     // console.log(arregloHora[2]);
 
     let mesHayer = new Date("8/25/2019, 8:50:25 PM").getMonth();
-    console.log("mes del historial: ", mesHayer+1);
+    console.log("mes del historial: ", mesHayer + 1);
 
     const fechaMedidor = new Date("9/1/2019, 6:55:25 AM");
     const fechaServidor = new Date();

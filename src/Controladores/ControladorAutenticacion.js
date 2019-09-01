@@ -13,7 +13,7 @@ ControladorAutenticacion.iniciarSesion = function(req, res, next, io, clientesAc
                         return next(error);
                     }else{//Si no hubo error al loggear con passport
                         /* Se responde con exito al usuario*/
-                        return res.status(200).send({Error: false, Estado: true, Mensaje: "Sesion iniciada correctamentee.", EsAdmin: respuesta.esAdmi});
+                        return res.status(200).send({Error: false, Estado: true, Mensaje: "Sesion iniciada correctamentee."});
                     }
                 });
             }else{

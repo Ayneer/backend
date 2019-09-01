@@ -64,6 +64,10 @@ ControladorCliente.buscarClienteMedidor = function (IdMedidor) {
     return Cliente.findOne({ id_medidor: IdMedidor });
 }
 
+ControladorCliente.buscarClientes = function (){
+    return Cliente.find({});
+}
+
 ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
     //Depende del usuario que va a hacer la modificación
 
