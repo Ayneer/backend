@@ -112,10 +112,23 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
         } else {
             if (req['mod'] === "modA2") {
                 //Actualizar datos criticos
-                actualizacion.nombre = req['nombre'];
-                actualizacion.apellidos = req['apellido'];
-                actualizacion.cedula = req['cedula'];
-                actualizacion.id_medidor = req['id_medidor'];
+                const cli = await Cliente.findOne({id_medidor: req['id_medidor']});
+                if(cli){
+                    if(cli.correo === correoR){//El id_medidor no se esta actualizando.
+                        actualizacion.nombre = req['nombre'];
+                        actualizacion.apellidos = req['apellido'];
+                        actualizacion.cedula = req['cedula'];
+                        actualizacion.id_medidor = req['id_medidor'];
+                    }else{
+                        return res.status(401).send({ error: true, estado: false, mensaje: "El id de medidor, ya esta siendo utilizado por otro cliente!" });
+                    }
+                }else{//No esta ocupado el id de medidor, se puede hacer la actualización
+                    actualizacion.nombre = req['nombre'];
+                    actualizacion.apellidos = req['apellido'];
+                    actualizacion.cedula = req['cedula'];
+                    actualizacion.id_medidor = req['id_medidor'];
+                }
+                
             } else {
                 return res.status(401).send({ error: true, estado: false, mensaje: "Accion desconocida!" });
             }

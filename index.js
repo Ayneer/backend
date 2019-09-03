@@ -54,29 +54,41 @@ io.on('connection', function (clienteSocket) {
 
     /*Se suscribe el cliente al la lista de clientes activos */
     clienteSocket.on('mi_correo', async (mi_correo) => {
-        
-        if(await cCliente.buscarClienteCorreo(mi_correo)){
 
-            app.get('clientesActivos').push({correo_cliente: mi_correo, idSocketCliente: clienteSocket.id });
-            app.set('clientesActivos', app.get('clientesActivos'));
-    
-            console.log('clientes subscritos: ', app.get('clientesActivos'));
-    
-            clienteSocket.emit('recibido', "correo recibido");
-            
-        }else{
+        if (await cCliente.buscarClienteCorreo(mi_correo)) {
+
+            let cont = 0;
+
+            app.get('clientesActivos').forEach((cli) => {
+
+                if (cli['correo_cliente'] === mi_correo) {
+                    cont = cont + 1;
+                }
+
+            });
+
+            if (cont === 0) {//No esta el correo en la lista de clientes activos
+                app.get('clientesActivos').push({ correo_cliente: mi_correo, idSocketCliente: clienteSocket.id });
+                app.set('clientesActivos', app.get('clientesActivos'));
+
+                console.log('clientes subscritos: ', app.get('clientesActivos'));
+
+                clienteSocket.emit('recibido', "correo recibido");
+            }
+
+        } else {
             clienteSocket.disconnect(true);
         }
-        
+
     });
 
-    clienteSocket.on('salir', (mi_correo)=>{
-        for (var i =0; i < app.get('clientesActivos').length; i++){
+    clienteSocket.on('salir', (mi_correo) => {
+        for (var i = 0; i < app.get('clientesActivos').length; i++) {
             if (app.get('clientesActivos')[i].correo_cliente === mi_correo) {
-                app.get('clientesActivos').splice(i,1);
+                app.get('clientesActivos').splice(i, 1);
                 clienteSocket.disconnect(true);
             }
-         }
+        }
         console.log(app.get('clientesActivos'));
     })
 

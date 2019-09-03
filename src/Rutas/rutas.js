@@ -10,7 +10,7 @@ const cConsumo = require('../Controladores/ControladorConsumo');
 /* SESION */
 rutas.post('/iniciarSesion', (req, res, next) => {
     if (!cAutenticacion.estoyAutenticado(req)) {
-        cAutenticacion.iniciarSesion(req, res, next, req.app.get('socketio'), req.app.get('clientesActivos'));
+        cAutenticacion.iniciarSesion(req, res, next, req.app.get('clientesActivos'));
     } else {
         res.status(401).send({ error: false, estado: false, mensaje: "Ya estas autenticado." });
     }
