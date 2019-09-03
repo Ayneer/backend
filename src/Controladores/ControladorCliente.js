@@ -96,10 +96,23 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
                 //Cambio la contraseña
                 actualizacion.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
             }
-            actualizacion.correo = req['correo'];
-            actualizacion.telefono = req['telefono'];
-            actualizacion.limite = req['limite'];
-            actualizacion.tipoLimite = req['tipoLimite'];
+            const cli = await Cliente.findOne({correo: req['correo']});
+            if(cli){
+                if(cli.correo === correoR){//No estoy actualizando el correo
+                    actualizacion.correo = req['correo'];
+                    actualizacion.telefono = req['telefono'];
+                    actualizacion.limite = req['limite'];
+                    actualizacion.tipoLimite = req['tipoLimite'];
+                }else{
+                    return res.status(401).send({ error: true, estado: false, mensaje: "El correo, ya esta en uso!" });
+                }
+            }else{
+                actualizacion.correo = req['correo'];
+                actualizacion.telefono = req['telefono'];
+                actualizacion.limite = req['limite'];
+                actualizacion.tipoLimite = req['tipoLimite'];
+            }
+            
         } else {
             /* Intentan hackear al servidor. */
             return res.status(401).send({ error: true, estado: false, mensaje: "Accion denegada!!" });
