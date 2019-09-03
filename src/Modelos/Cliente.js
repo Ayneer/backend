@@ -5,7 +5,8 @@ const esquema_Cliente = new mongoose.Schema({
     cedula: { type: Number, required: true},
     telefono: { type: Number },
     id_medidor: { type: Number, required: true},
-    limite: {type: Number}
+    limite: {type: Number},
+    tipoLimite: {type: Number}
 });
 
 esquema_Cliente.add(Usuario);

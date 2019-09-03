@@ -144,10 +144,10 @@ rutas.post('/consumo', async (req, res) => {
     const cliente = await cCliente.buscarClienteMedidor(req.body['id_medidor']);
 
     if (cliente) {//si existe el cliente si registra el consumo.
-        const correo = cliente.correo;//Para saber a quien enviar el consumo por socket
         //Se consulta el costo unitario
         const costoU = await cAdministrador.costoUnitario();
-        cConsumo.registrarConsumoReal(req.body, correo, res, req, costoU.costoUnitario);
+        console.log(costoU);
+        cConsumo.registrarConsumoReal(req.body, res, req, costoU.costoUnitario, cliente);
     } else {
         //Si no existe el cliente, no se registra el consumo.
         res.send({ error: true, estado: false, mensaje: "No existe el cliente para este id de medidor." });

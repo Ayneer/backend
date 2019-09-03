@@ -104,6 +104,6 @@ ControladorAdministrador.definirCostoUnitario = async function (nuevoCosto, res)
 }
 
 ControladorAdministrador.costoUnitario = function(){
-    return Sistema.find({});
+    return Sistema.findOne({});
 }
 module.exports = ControladorAdministrador;

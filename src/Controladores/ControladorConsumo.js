@@ -3,7 +3,7 @@ const Historial = require('../Modelos/Historial');
 
 const ControladorConsumo = {};
 
-ControladorConsumo.enviarConsumoReal = function (correo_cliente, res, ultimoConsumo, req) {
+ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, req, costoU) {
     /* ¿El cliente que le corresponde este consumo esta activo? */
     const clientesActivos = req.app.get('clientesActivos');
 
@@ -15,15 +15,31 @@ ControladorConsumo.enviarConsumoReal = function (correo_cliente, res, ultimoCons
 
         var cont = 0;
 
-        clientesActivos.forEach((cliente) => {
+        clientesActivos.forEach((cli) => {
             /* Si esta activo, le emitimos su consumo */
-            if (cliente['correo_cliente'] === correo_cliente) {
+            if (cli['correo_cliente'] === cliente.correo) {
 
                 cont = cont + 1;
 
                 const io = req.app.get('socketio');
 
-                io.to(cliente['idSocketCliente']).emit('consumoReal', ultimoConsumo);
+                io.to(cli['idSocketCliente']).emit('consumoReal', ultimoConsumo);
+
+                //Ahora se verifica si el cliente definio algun tipo de limite
+                if (cliente.limite) {
+                    
+                    //Ahora se verifica si el consumoReal esta excediento el limite del cliente.
+                    //Se alerta en caso de sobrepasar/igualar el 50, 80 y 100 % del limite.
+                    if (cliente.tipoLimite === 0) {//Limite por kwh
+                        if (ultimoConsumo >= (0.5 * (cliente.limite))) {
+                            io.to(cli['idSocketCliente']).emit('limiteKwh', ultimoConsumo.consumoMes);
+                        }
+                    } else {//Limite por costo
+                        if ( ( ultimoConsumo * costoU ) >= (0.5 * (cliente.limite))) {
+                            io.to(cli['idSocketCliente']).emit('limiteCosto', ultimoConsumo.consumoMes);
+                        }
+                    }
+                }
 
                 res.send({ mensaje: "Historial, Consumo actualizado y/o guardado con exito! y Consumo enviado al cliente" });
             }
@@ -42,15 +58,15 @@ ControladorConsumo.buscarConsumoReal = function (idMedidor) {
     return ConsumoReal.findOne({ id_medidor: idMedidor });
 }
 
-ControladorConsumo.registrarConsumoReal = async function (body, correoCliente, res, req, costoU) {
+ControladorConsumo.registrarConsumoReal = async function (body, res, req, costoU, cliente) {
     //Lo primero es saber si es primera vez que se guarda un consumo real para el id de medidor.
     const consumoReal = await ConsumoReal.findOne({ id_medidor: body['id_medidor'] });
-    
+
     const fechaMedidor = new Date(body['fecha']);
-    
+
     const fechaActual = new Date().toLocaleString('en-us', { hour12: true });
     const fechaServidor = new Date(fechaActual);
-    
+
     const diferenciaFechas = fechaServidor - fechaMedidor;//Diferencia en milisegundos.
     console.log("fechaServidor", fechaServidor);
     console.log("fechaMedidor", fechaMedidor);
@@ -78,16 +94,16 @@ ControladorConsumo.registrarConsumoReal = async function (body, correoCliente, r
                 if (error) {
                     return res.send('Error al guardar el consumo');
                 } else {
-                    this.registrarConsumoHistorial(nuevoConsumoReal, costoU, res, correoCliente, req);
+                    this.registrarConsumoHistorial(nuevoConsumoReal, costoU, res, req, cliente);
                 }
             });
 
         }
     } else {//Se validan los datos con los ya guardados.
-        
+
         const fechaConsumoGuardado = new Date(consumoReal.fecha_consumo);
         const diFechasConConsumo = fechaMedidor - fechaConsumoGuardado;//Diferencia en milisegundos.
-        
+
         //El ultimo total de consumo enviado por el medidor es = (consumoReal.consumoMes + consumoReal.totalConsumo). consumoReal es el encontrado.
         const ultimoConsumoTotal = consumoReal.consumoMes + consumoReal.totalConsumo;
 
@@ -99,10 +115,10 @@ ControladorConsumo.registrarConsumoReal = async function (body, correoCliente, r
             //Para saber si estoy o no en el mismo mes.
             const resta = (fechaMedidor.getMonth() + 1) - (fechaConsumoGuardado.getMonth() + 1);
 
-            console.log("resta: ",(fechaMedidor.getMonth() + 1)," - ",(fechaConsumoGuardado.getMonth() + 1));
+            console.log("resta: ", (fechaMedidor.getMonth() + 1), " - ", (fechaConsumoGuardado.getMonth() + 1));
 
             if (resta > 0) {//Inicio de nuevo mes
-                
+
                 console.log("nuevo mes!");
 
                 /*  consumoReal.totalConsumo = Total de consumo de los meses anteriores. */
@@ -135,7 +151,7 @@ ControladorConsumo.registrarConsumoReal = async function (body, correoCliente, r
 
             if (cont === 0) {
                 //Registramos el consumoReal en el historial.
-                this.registrarConsumoHistorial(consumoReal, costoU, res, correoCliente, req);
+                this.registrarConsumoHistorial(consumoReal, costoU, res, req, cliente);
             }
 
         }
@@ -149,7 +165,7 @@ ControladorConsumo.consumoReal = function (id_medidor) {
     return ConsumoReal.findOne({ id_medidor: id_medidor });
 }
 
-ControladorConsumo.registrarConsumoHistorial = async function (ConsumoReal, costoUnitarioKwh, res, correoCliente, req) {
+ControladorConsumo.registrarConsumoHistorial = async function (ConsumoReal, costoUnitarioKwh, res, req, cliente) {
     //En esta instacia, ya se ha verificado el consumo, proveniente del medidor.
     //Ahora toca hacer las validaciones, para saber a que historial le corresponde.
 
@@ -171,10 +187,10 @@ ControladorConsumo.registrarConsumoHistorial = async function (ConsumoReal, cost
             console.log(nuevoHistorial);
             nuevoHistorial.save((error, historial) => {
                 if (error) {
-                    return res.send("Consumo Real guardado pero, No se pudo guardar el historial.");
+                    return res.send("Consumo Real guardado pero, No se pudo guardar el historial.", error);
                 } else {
                     if (historial) {
-                        this.enviarConsumoReal(correoCliente, res, ConsumoReal.consumoMes, req);
+                        this.enviarConsumoReal(cliente, res, ConsumoReal.consumoMes, req, costoUnitarioKwh);
                     }
                 }
             });
@@ -204,22 +220,22 @@ ControladorConsumo.registrarConsumoHistorial = async function (ConsumoReal, cost
         const arregloFechaH = ultimoHistorial.fecha.split(",");
         //arregloFechaCR[0] = "8/27/2019" para el ejemplo.
         if (arregloFechaCR[0] === arregloFechaH[0]) {//Existe ya un historial y se va actualizar
-            
+
             //Sigo dividiendo la cadena del consumo real, proveniente del medidor
             //con el fin de obtener si es "AM" o "PM"
-            
+
             const arregloHoraCR = arregloFechaCR[1].split(" ");
             let actualizacion = {};
             let contError = 0;
             const consumoRealDia = ConsumoReal.consumoMes - ultimoHistorial.consumoDiasAnteriores;
-            
+
             //arregloHoraCR[2] = "PM" para el ejemplo
             if (arregloHoraCR[2] === "AM") {
 
 
 
                 if (hora === 12 || (hora >= 1 && hora <= 5)) {//Madrugada OK
-                    
+
                     actualizacion.consumoMadrugada = consumoRealDia;
                     actualizacion.totalConsumoDia = actualizacion.consumoMadrugada;
 
@@ -321,7 +337,7 @@ ControladorConsumo.registrarConsumoHistorial = async function (ConsumoReal, cost
                         return res.send("Consumo Real guardado pero, No se pudo actualizar el historial.");
                     }
                 });
-                this.enviarConsumoReal(correoCliente, res, ConsumoReal.consumoMes, req);
+                this.enviarConsumoReal(cliente, res, ConsumoReal.consumoMes, req, costoUnitarioKwh);
             }
 
         } else {//Existe ya un historial pero es un nuevo dia
@@ -338,10 +354,11 @@ ControladorConsumo.registrarConsumoHistorial = async function (ConsumoReal, cost
                 //Se guarda
                 nuevoHistorial.save((error, historial) => {
                     if (error) {
+                        console.log(error);
                         return res.send("Consumo Real guardado pero, No se pudo guardar el historial.");
                     } else {
                         if (historial) {
-                            this.enviarConsumoReal(correoCliente, res, ConsumoReal.consumoMes, req);
+                            this.enviarConsumoReal(cliente, res, ConsumoReal.consumoMes, req, costoUnitarioKwh);
                         }
                     }
                 });
@@ -387,13 +404,13 @@ ControladorConsumo.nuevoHistorial = function (consumoReal, historialAyer, costoU
         let mesCR = fechaConsumoReal.getMonth() + 1;
         let mesHayer = new Date(historialAyer.fecha).getMonth() + 1;
         console.log("mes del historial: ", mesHayer);
-        if(mesCR === mesHayer){
+        if (mesCR === mesHayer) {
             nuevoHistorial.consumoDiasAnteriores = historialAyer.consumoDiasAnteriores + historialAyer.totalConsumoDia;
-        }else{
+        } else {
             nuevoHistorial.consumoDiasAnteriores = 0;
         }
         consumoRealDia = consumoReal.consumoMes - nuevoHistorial.consumoDiasAnteriores;
-        
+
     }
 
 
@@ -466,8 +483,8 @@ ControladorConsumo.nuevoHistorial = function (consumoReal, historialAyer, costoU
     }
 }
 
-ControladorConsumo.buscarHistorial = function (id_medidor){
-    return Historial.find({id_medidor: id_medidor});
+ControladorConsumo.buscarHistorial = function (id_medidor) {
+    return Historial.find({ id_medidor: id_medidor });
 }
 
 module.exports = ControladorConsumo;

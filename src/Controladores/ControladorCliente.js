@@ -72,7 +72,7 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
     //Depende del usuario que va a hacer la modificación
 
     /* Por parte del cliente el podrá modificar:
-    Correo, telefono, limite y contraseña.*/
+    Correo, telefono, limite, tipoLimite y contraseña.*/
 
     /* Por parte del administrador el podrá recuperar la contraseña = modA1.
     y/o modificar datos criticos (nombre, apellido, id_medidor y cedula) = modA2.
@@ -99,6 +99,7 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
             actualizacion.correo = req['correo'];
             actualizacion.telefono = req['telefono'];
             actualizacion.limite = req['limite'];
+            actualizacion.tipoLimite = req['tipoLimite'];
         } else {
             /* Intentan hackear al servidor. */
             return res.status(401).send({ error: true, estado: false, mensaje: "Accion denegada!!" });

@@ -63,6 +63,7 @@ io.on('connection', function (clienteSocket) {
             console.log('clientes subscritos: ', app.get('clientesActivos'));
     
             clienteSocket.emit('recibido', "correo recibido");
+            
         }else{
             clienteSocket.disconnect(true);
         }
