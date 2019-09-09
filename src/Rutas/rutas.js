@@ -8,15 +8,29 @@ const cCliente = require('../Controladores/ControladorCliente');
 const cConsumo = require('../Controladores/ControladorConsumo');
 
 /* SESION */
-rutas.post('/iniciarSesion', (req, res, next) => {
-    if (!cAutenticacion.estoyAutenticado(req)) {
-        cAutenticacion.iniciarSesion(req, res, next, req.app.get('clientesActivos'));
-    } else {
-        res.status(401).send({ error: false, estado: false, mensaje: "Ya estas autenticado." });
-    }
+rutas.post('/iniciarSesion', async (req, res, next) => {
+    console.log("nuevo intento de iniciar sesion");
+    console.log(req.body);
+    const cliente = await cCliente.buscarClienteCorreo(req.body['correo']);
+    const admin = await cAdministrador.buscarAdministradorCorreo(req.body['correo']);
+    
+        console.log(req.user);
+        if (!cAutenticacion.estoyAutenticado(req)) {
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+            cAutenticacion.iniciarSesion(req, res, next, req.app.get('clientesActivos'));
+        } else {
+            console.log(req.sessionID);
+            res.status(401).send({ error: false, estado: true, mensaje: "Ya estas autenticado." });
+        }
+    // }else{
+    //     res.status(401).send({ error: false, estado: false, mensaje: "No estas registrado en el sistema." });
+    // }
+
 });
 
 rutas.get('/cerrarSesion', (req, res) => {
+    console.log(req.user);
+
     if (cAutenticacion.estoyAutenticado(req)) {
         cAutenticacion.cerrarSesion(req, res);
     } else {
@@ -26,9 +40,11 @@ rutas.get('/cerrarSesion', (req, res) => {
 
 rutas.get('/estoyAutenticado', (req, res) => {
     if (!cAutenticacion.estoyAutenticado(req)) {
+        console.log("No Estoy autenticado.");
         res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
     } else {
-        res.status(200).send({ error: false, estado: true, mensaje: "Sesion activa correctamente." });
+        console.log("Estoy autenticado.");
+        res.status(200).send({ error: false, estado: true, mensaje: "Sesion activa correctamente.", usuario: req.user });
     }
 });
 
@@ -131,7 +147,7 @@ rutas.put('/sistema', async (req, res) => {
     } else {
         res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
     }
-    
+
 });
 
 
@@ -147,7 +163,8 @@ rutas.post('/consumo', async (req, res) => {
         //Se consulta el costo unitario
         const costoU = await cAdministrador.costoUnitario();
         console.log(costoU);
-        cConsumo.registrarConsumoReal(req.body, res, req, costoU.costoUnitario, cliente);
+        //cConsumo.registrarConsumoReal(req.body, res, req, costoU.costoUnitario, cliente);
+        cConsumo.registrarConsumoReal(req.body, res, req, 130, cliente);
     } else {
         //Si no existe el cliente, no se registra el consumo.
         res.send({ error: true, estado: false, mensaje: "No existe el cliente para este id de medidor." });
@@ -156,23 +173,29 @@ rutas.post('/consumo', async (req, res) => {
 
 //Petición realizada por el cliente para conocer su consumo real.
 rutas.get('/consumo/:correo', async (req, res) => {
+    console.log("se solicita el consumo real");
     //Se verifica que este autenticado el req
     //Si estas auitenticado, existe el correo cliente.
     if (cAutenticacion.estoyAutenticado(req)) {
+        console.log("quien solicita el consumo real esta autenticado");
+        console.log(req.params.correo);
         //Se valida que el correo que solicita conocer el consumo real es el mismo del logueado
         if (req.user.correo === req.params.correo) {
+            console.log("es su mismo correo");
             //Metodo que busca el ultimo consumo de un medidor.
             const ConsumoReal = await cConsumo.consumoReal(req.user.id_medidor);
             if (ConsumoReal) {
-
+                console.log("tiene un consumo real");
                 res.status(200).send({ error: false, estado: true, mensaje: ConsumoReal });
-
             } else {
-
+                console.log("NO tiene un consumo real");
                 res.status(200).send({ error: false, estado: false, mensaje: "Aun no existen datos de consumo. Verifica el funcionamineto del medidor." });
             }
+        }else{
+            res.status(200).send({ error: false, estado: false, mensaje: "No se puede verificar al usuario!" });
         }
     } else {
+        console.log("NO es su mismo correo");
         res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
     }
 

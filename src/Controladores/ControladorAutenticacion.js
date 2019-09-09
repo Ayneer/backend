@@ -15,14 +15,18 @@ ControladorAutenticacion.iniciarSesion = function (req, res, next, clientesActiv
     if (cont === 0) {//No tiene la sesion iniciada el usuario cliente. Puede iniciar sesion
         passport.authenticate('local', function (error, respuesta, usuario) {
             if (!error) {
+
+                console.log(respuesta);
+
                 if (respuesta.estado) {
 
                     req.logIn(usuario, (error) => {
                         if (error) {
+                            console.log(error);
                             return res.status(500).send({ error: true, estado: false, mensaje: "Error #1 en el sistema, intente mas tarde." });
                         } else {//Si no hubo error al loggear con passport
                             /* Se responde con exito al usuario*/
-                            return res.status(200).send({ Error: false, Estado: true, Mensaje: "Sesion iniciada correctamente." });
+                            return res.status(200).send({ Error: false, Estado: true, Mensaje: "Sesion iniciada correctamente. Si eres cliente, por favor enviar correo por socket." });
                         }
                     });
                 } else {
@@ -39,6 +43,7 @@ ControladorAutenticacion.iniciarSesion = function (req, res, next, clientesActiv
 }
 
 ControladorAutenticacion.cerrarSesion = function (req, res) {
+    
     req.logOut();
     return res.status(200).send({ error: false, estado: true, mensaje: "Sesion cerrada correctamente." });
 }

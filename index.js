@@ -7,6 +7,8 @@ const io = require('socket.io')(http);
 const rutas = require('./src/Rutas/rutas');
 const passport = require('passport');
 const session = require('express-session');
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
 
 //Controlador
 const cCliente = require('./src/Controladores/ControladorCliente');
@@ -26,22 +28,24 @@ app.set('clientesActivos', clientesActivos);
 //Configuracion de middleware
 app.use(bodyParse.urlencoded({ extended: false }));
 app.use(express.json());
+app.use(cors({
+    'allowedHeaders': ['sessionId', 'Content-Type'],
+    'exposedHeaders': ['sessionId'],
+    'credentials': true,
+    'origin': ['http://localhost:3000', 'http://192.168.1.69:3000']
+}));
+//app.use(cookieParser('secretoLlave'));
 app.use(session({
-    secret: 'secretoLlave@',
+    secret: 'secretoLlave',
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    /*cookie:{
+        httpOnly: false,
+        maxAge: null
+    }*/
 }));
 app.use(passport.initialize());
 app.use(passport.session());
-
-// SOLO EN MODO DEV, EN PRODUCCIÓN BORRAR ESTO!!
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-    res.header('Allow', 'GET, POST, OPTIONS, PUT, DELETE');
-    next();
-});
 
 /* Cargamos las rutas definidas. */
 app.use('/', rutas);
@@ -50,7 +54,7 @@ app.use('/', rutas);
 /* Se detecta la conexion de un socketCliente. */
 io.on('connection', function (clienteSocket) {
 
-    console.log('nuevo cliente conectado');
+    console.log('nuevo cliente conectado', clienteSocket.id);
 
     /*Se suscribe el cliente al la lista de clientes activos */
     clienteSocket.on('mi_correo', async (mi_correo) => {
@@ -73,7 +77,7 @@ io.on('connection', function (clienteSocket) {
 
                 console.log('clientes subscritos: ', app.get('clientesActivos'));
 
-                clienteSocket.emit('recibido', "correo recibido");
+                clienteSocket.emit('recibido', true);
             }
 
         } else {
@@ -86,11 +90,13 @@ io.on('connection', function (clienteSocket) {
         for (var i = 0; i < app.get('clientesActivos').length; i++) {
             if (app.get('clientesActivos')[i].correo_cliente === mi_correo) {
                 app.get('clientesActivos').splice(i, 1);
+                clienteSocket.emit('recibido', true);
                 clienteSocket.disconnect(true);
+                break;
             }
         }
         console.log(app.get('clientesActivos'));
-    })
+    });
 
 });
 
