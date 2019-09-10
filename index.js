@@ -58,7 +58,7 @@ io.on('connection', function (clienteSocket) {
 
     /*Se suscribe el cliente al la lista de clientes activos */
     clienteSocket.on('mi_correo', async (mi_correo) => {
-
+        console.log("Llego correo para iniciar sesion");
         if (await cCliente.buscarClienteCorreo(mi_correo)) {
 
             let cont = 0;
@@ -81,6 +81,7 @@ io.on('connection', function (clienteSocket) {
             }
 
         } else {
+            console.log("Pa fuera");
             clienteSocket.disconnect(true);
         }
 
@@ -95,6 +96,28 @@ io.on('connection', function (clienteSocket) {
                 break;
             }
         }
+        console.log("clientes activos: ");
+        console.log(app.get('clientesActivos'));
+    });
+
+    clienteSocket.on('actualizarSocket', (mi_correo) => {
+        console.log("Actualizando socket..");
+        for (var i = 0; i < app.get('clientesActivos').length; i++) {
+
+            if (app.get('clientesActivos')[i].correo_cliente === mi_correo) {
+
+                app.get('clientesActivos').splice(i, 1);
+
+                break;
+            }
+
+        }
+        
+        app.get('clientesActivos').push({ correo_cliente: mi_correo, idSocketCliente: clienteSocket.id });
+        app.set('clientesActivos', app.get('clientesActivos'));
+        clienteSocket.emit('Actualizado', true);
+
+        console.log("clientes activos: ");
         console.log(app.get('clientesActivos'));
     });
 

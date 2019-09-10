@@ -67,7 +67,8 @@ ControladorConsumo.registrarConsumoReal = async function (body, res, req, costoU
     const fechaActual = new Date().toLocaleString('en-us', { hour12: true });
     const fechaServidor = new Date(fechaActual);
 
-    const diferenciaFechas = fechaServidor - fechaMedidor;//Diferencia en milisegundos.
+    //const diferenciaFechas = fechaServidor - fechaMedidor;//Diferencia en milisegundos.
+    const diferenciaFechas = 0;//Diferencia en milisegundos.
     console.log("fechaServidor", fechaServidor);
     console.log("fechaMedidor", fechaMedidor);
     console.log("fechaServidor L", fechaServidor.toLocaleString('en-us', { hour12: true }));
@@ -80,13 +81,16 @@ ControladorConsumo.registrarConsumoReal = async function (body, res, req, costoU
         - La comunicación debe ser en el mismo dia. 24h = 86400000 ms 
         1 min = 60000 ms. El retraso como mucho debe de ser de menos de un minuto
         */
-        if (diferenciaFechas < 0 || diferenciaFechas >= 60000 || body['consumoTotal'] < 0) {
+        if (diferenciaFechas < 0 || diferenciaFechas > 60000 || body['consumoTotal'] < 0) {
             //No se debe retardar por mas de 5 segundos o inclusio milisegundos.
             //Si el retardo es mas de 5 mininutos implementar otra solución.
+            console.log(diferenciaFechas);
             return res.send('Datos erroneos o tiempo de envio excedido.');
         } else {
             const nuevoConsumoReal = new ConsumoReal();
             nuevoConsumoReal.fecha_consumo = fechaMedidor.toLocaleString('en-us', { hour12: true });
+            console.log("Fecha de consumo Real a guardar:", nuevoConsumoReal.fecha_consumo);
+            //nuevoConsumoReal.fecha_consumo = body['fecha'];
             nuevoConsumoReal.consumoMes = body['consumoTotal'];
             nuevoConsumoReal.id_medidor = body['id_medidor'];
             nuevoConsumoReal.totalConsumo = 0;
@@ -109,7 +113,7 @@ ControladorConsumo.registrarConsumoReal = async function (body, res, req, costoU
 
         if (diFechasConConsumo <= 0 || body['consumoTotal'] <= consumoReal.totalConsumo || body['consumoTotal'] <= ultimoConsumoTotal || diferenciaFechas < 0) {
 
-            return res.send('Error con fechas y/o consumo. Estan manipulando al medidor.');
+            return res.send('Error con fechas y/o consumo. Estan manipulando al medidor. opc1');
 
         } else {
             //Para saber si estoy o no en el mismo mes.
@@ -134,11 +138,12 @@ ControladorConsumo.registrarConsumoReal = async function (body, res, req, costoU
             consumoReal.fecha_consumo = body['fecha'];
 
             const actualizacion = {
-                fecha_consumo: consumoReal.fecha_consumo,
+                fecha_consumo: body['fecha'],
                 consumoMes: consumoReal.consumoMes,
                 totalConsumo: consumoReal.totalConsumo
             }
-
+            console.log("Consumo a actualizar:", actualizacion);
+            console.log(body['fecha'])
             let cont = 0;
 
             await ConsumoReal.findOneAndUpdate({ id_medidor: consumoReal.id_medidor }, actualizacion, function (error) {
@@ -171,8 +176,12 @@ ControladorConsumo.registrarConsumoHistorial = async function (ConsumoReal, cost
 
     //Investigo la existencia de algun historial con el id_medidor del parametro
     //Que se supone, el ultimo registro guardado es la fecha mas reciente.
+    console.log("--------------------------------------------------------------");
+    console.log("reregistrarConsumoHistorial");
+    console.log(ConsumoReal);
     const ultimoHistorial = await Historial.findOne({ id_medidor: ConsumoReal.id_medidor }).sort({ field: 'asc', _id: -1 }).limit(1);
-
+    console.log("Historial encontrado");
+    console.log(ultimoHistorial);
     if (!ultimoHistorial) {//No hay registros de historial
 
         //nuevoHistorial() Devuelve false o un documento de Historial con el valor
@@ -184,6 +193,7 @@ ControladorConsumo.registrarConsumoHistorial = async function (ConsumoReal, cost
             let nuevoHistorial = new Historial();
             nuevoHistorial = documetoHistorial;
             //Se guarda
+            console.log("Historial guardado, es etse:");
             console.log(nuevoHistorial);
             nuevoHistorial.save((error, historial) => {
                 if (error) {
@@ -219,6 +229,10 @@ ControladorConsumo.registrarConsumoHistorial = async function (ConsumoReal, cost
         const arregloFechaCR = ConsumoReal.fecha_consumo.split(",");
         const arregloFechaH = ultimoHistorial.fecha.split(",");
         //arregloFechaCR[0] = "8/27/2019" para el ejemplo.
+        console.log("......Diferencia..........");
+        console.log(arregloFechaCR[0]);
+        console.log(arregloFechaH[0]);
+        console.log("................");
         if (arregloFechaCR[0] === arregloFechaH[0]) {//Existe ya un historial y se va actualizar
 
             //Sigo dividiendo la cadena del consumo real, proveniente del medidor

@@ -13,15 +13,15 @@ rutas.post('/iniciarSesion', async (req, res, next) => {
     console.log(req.body);
     const cliente = await cCliente.buscarClienteCorreo(req.body['correo']);
     const admin = await cAdministrador.buscarAdministradorCorreo(req.body['correo']);
-    
-        console.log(req.user);
-        if (!cAutenticacion.estoyAutenticado(req)) {
-            res.setHeader('Access-Control-Allow-Credentials', 'true');
-            cAutenticacion.iniciarSesion(req, res, next, req.app.get('clientesActivos'));
-        } else {
-            console.log(req.sessionID);
-            res.status(401).send({ error: false, estado: true, mensaje: "Ya estas autenticado." });
-        }
+
+    console.log(req.user);
+    if (!cAutenticacion.estoyAutenticado(req)) {
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        cAutenticacion.iniciarSesion(req, res, next, req.app.get('clientesActivos'));
+    } else {
+        console.log(req.sessionID);
+        res.status(401).send({ error: false, estado: true, mensaje: "Ya estas autenticado." });
+    }
     // }else{
     //     res.status(401).send({ error: false, estado: false, mensaje: "No estas registrado en el sistema." });
     // }
@@ -29,7 +29,6 @@ rutas.post('/iniciarSesion', async (req, res, next) => {
 });
 
 rutas.get('/cerrarSesion', (req, res) => {
-    console.log(req.user);
 
     if (cAutenticacion.estoyAutenticado(req)) {
         cAutenticacion.cerrarSesion(req, res);
@@ -44,7 +43,15 @@ rutas.get('/estoyAutenticado', (req, res) => {
         res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
     } else {
         console.log("Estoy autenticado.");
-        res.status(200).send({ error: false, estado: true, mensaje: "Sesion activa correctamente.", usuario: req.user });
+        let socket = null;
+        req.app.get('clientesActivos').forEach((cli) => {
+
+            if (cli['correo_cliente'] === req.user.correo) {
+                socket = cli['idSocketCliente'];
+            }
+
+        });
+        res.status(200).send({ error: false, estado: true, mensaje: "Sesion activa correctamente.", usuario: req.user, socket: socket });
     }
 });
 
@@ -155,6 +162,10 @@ rutas.put('/sistema', async (req, res) => {
 
 /* Metodo que usa el medidor inteligente para enviar el consumo registrado */
 rutas.post('/consumo', async (req, res) => {
+    console.log("-----------------Fecha des reutas--------------------");
+    console.log(req.body["fecha"]);
+    console.log(new Date().toLocaleString('en-us', { hour12: true }));
+    console.log("-----------------Fecha des reutas--------------------");
     //se usan los dos controladores, el de consumoReal e Historial.
     //Buscar cliente con el id_medidor que llega.
     const cliente = await cCliente.buscarClienteMedidor(req.body['id_medidor']);
@@ -162,7 +173,7 @@ rutas.post('/consumo', async (req, res) => {
     if (cliente) {//si existe el cliente si registra el consumo.
         //Se consulta el costo unitario
         const costoU = await cAdministrador.costoUnitario();
-        console.log(costoU);
+
         //cConsumo.registrarConsumoReal(req.body, res, req, costoU.costoUnitario, cliente);
         cConsumo.registrarConsumoReal(req.body, res, req, 130, cliente);
     } else {
@@ -186,12 +197,12 @@ rutas.get('/consumo/:correo', async (req, res) => {
             const ConsumoReal = await cConsumo.consumoReal(req.user.id_medidor);
             if (ConsumoReal) {
                 console.log("tiene un consumo real");
-                res.status(200).send({ error: false, estado: true, mensaje: ConsumoReal });
+                res.status(200).send({ error: false, estado: true, mensaje: "Hay consumo!", consumoMes: ConsumoReal });
             } else {
                 console.log("NO tiene un consumo real");
                 res.status(200).send({ error: false, estado: false, mensaje: "Aun no existen datos de consumo. Verifica el funcionamineto del medidor." });
             }
-        }else{
+        } else {
             res.status(200).send({ error: false, estado: false, mensaje: "No se puede verificar al usuario!" });
         }
     } else {

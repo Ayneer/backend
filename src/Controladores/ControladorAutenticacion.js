@@ -26,6 +26,7 @@ ControladorAutenticacion.iniciarSesion = function (req, res, next, clientesActiv
                             return res.status(500).send({ error: true, estado: false, mensaje: "Error #1 en el sistema, intente mas tarde." });
                         } else {//Si no hubo error al loggear con passport
                             /* Se responde con exito al usuario*/
+                            console.log("Nueva sesion iniciada");
                             return res.status(200).send({ Error: false, Estado: true, Mensaje: "Sesion iniciada correctamente. Si eres cliente, por favor enviar correo por socket." });
                         }
                     });
@@ -43,8 +44,9 @@ ControladorAutenticacion.iniciarSesion = function (req, res, next, clientesActiv
 }
 
 ControladorAutenticacion.cerrarSesion = function (req, res) {
-    
+    console.log("antes"+req.user);
     req.logOut();
+    console.log("antes"+req.user);
     return res.status(200).send({ error: false, estado: true, mensaje: "Sesion cerrada correctamente." });
 }
 
