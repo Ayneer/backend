@@ -34,7 +34,8 @@ passport.use(new estrategisLocal({
 
     const cliente = await Cliente.findOne({ correo: correo });
     const respuesta = {
-        estado : false
+        estado : false,
+        activo : false
     };
 
     /* Se verifica la existencia del cliente en la base de datos. */
@@ -69,6 +70,7 @@ passport.use(new estrategisLocal({
             return callBack(null, respuesta, null);
         } else {
             /* Existe el usuario cliente y la contraseña es valida */
+            respuesta.activo = cliente.activo;
             respuesta.estado = true;
             return callBack(null, respuesta, cliente);
         }

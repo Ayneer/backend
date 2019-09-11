@@ -84,9 +84,12 @@ rutas.delete('/cliente/:correo', (req, res) => {
 });
 
 rutas.put('/cliente/:correo', (req, res) => {
+    console.log("entro****************************");
     if (cAutenticacion.estoyAutenticado(req)) {
+        console.log("entro 3****************************");
         cCliente.actualizarCliente(req.params.correo, req.body, res, req.user);
     } else {
+        console.log("entro 2 ****************************");
         res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
     }
 });
