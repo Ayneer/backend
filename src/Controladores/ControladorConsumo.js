@@ -40,7 +40,7 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
                         }
                     }
                 }
-
+                
                 res.send({ mensaje: "Historial, Consumo actualizado y/o guardado con exito! y Consumo enviado al cliente" });
             }
 
