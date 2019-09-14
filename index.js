@@ -76,7 +76,7 @@ io.on('connection', function (clienteSocket) {
                 app.set('clientesActivos', app.get('clientesActivos'));
 
                 console.log('clientes subscritos: ', app.get('clientesActivos'));
-
+                //console.log(clienteSocket);
                 clienteSocket.emit('recibido', true);
             }
 
