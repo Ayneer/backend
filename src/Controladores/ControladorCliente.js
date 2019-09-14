@@ -98,31 +98,28 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
                 actualizacion.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
                 actualizacion.activo = true;
             } else {
-                /* Todo ok, el cliente puede modificar */
-                if (!req['contraseña'] === null) {
-                    //Cambio la contraseña
-                    actualizacion.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
-                }
-                const cli = await Cliente.findOne({ correo: req['correo'] });
-                if (cli) {
-                    if (cli.correo === correoR) {//No estoy actualizando el correo
-                        actualizacion.correo = req['correo'];
-                        actualizacion.telefono = req['telefono'];
-                        actualizacion.limite = req['limite'];
-                        actualizacion.tipoLimite = req['tipoLimite'];
-                    } else {
-                        return res.status(401).send({ error: true, estado: false, mensaje: "El correo, ya esta en uso!" });
-                    }
-                } else {
-                    actualizacion.correo = req['correo'];
-                    actualizacion.telefono = req['telefono'];
+                if (req['actualizarLimite']) {
                     actualizacion.limite = req['limite'];
                     actualizacion.tipoLimite = req['tipoLimite'];
+                } else {
+                    /* Todo ok, el cliente puede modificar */
+                    if (!req['contraseña'] === null) {
+                        //Cambio la contraseña
+                        actualizacion.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
+                    }
+                    const cli = await Cliente.findOne({ correo: req['correo'] });
+                    if (cli) {
+                        if (cli.correo === correoR) {//No estoy actualizando el correo
+                            actualizacion.telefono = req['telefono'];
+                        } else {
+                            return res.status(401).send({ error: true, estado: false, mensaje: "El correo, ya esta en uso!" });
+                        }
+                    } else {
+                        actualizacion.correo = req['correo'];
+                        actualizacion.telefono = req['telefono'];
+                    }
                 }
             }
-
-
-
         } else {
             /* Intentan hackear al servidor. */
             return res.status(401).send({ error: true, estado: false, mensaje: "Accion denegada!!" });

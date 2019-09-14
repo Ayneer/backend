@@ -32,11 +32,11 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
                     //Se alerta en caso de sobrepasar/igualar el 50, 80 y 100 % del limite.
                     if (cliente.tipoLimite === 0) {//Limite por kwh
                         if (ultimoConsumo >= (0.5 * (cliente.limite))) {
-                            io.to(cli['idSocketCliente']).emit('limiteKwh', ultimoConsumo.consumoMes);
+                            io.to(cli['idSocketCliente']).emit('limiteKwh', ultimoConsumo);
                         }
                     } else {//Limite por costo
                         if ( ( ultimoConsumo * costoU ) >= (0.5 * (cliente.limite))) {
-                            io.to(cli['idSocketCliente']).emit('limiteCosto', ultimoConsumo.consumoMes);
+                            io.to(cli['idSocketCliente']).emit('limiteCosto', ultimoConsumo);
                         }
                     }
                 }
