@@ -116,7 +116,8 @@ rutas.get('/clientes/:correo', async (req, res) => {
     if (cAutenticacion.estoyAutenticado(req)) {
         //Se valida que el correo que solicita conocer el historial es el mismo del logueado
         const admin = await cAdministrador.buscarAdministradorCorreo(req.user.correo);
-        if (admin) {
+        const cliente = await cCliente.buscarClienteCorreo(req.user.correo);
+        if (admin || cliente) {
             //Se verifica que exista el cliente
             const cliente = await cCliente.buscarClienteCorreo(req.params.correo);
             if (cliente) {
