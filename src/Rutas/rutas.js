@@ -161,15 +161,41 @@ rutas.put('/sistema', async (req, res) => {
 
 });
 
+/* CRUD ALERTA */
+rutas.post('/alerta', (req, res) => {
+    if (cAutenticacion.estoyAutenticado(req)) {
+        cConsumo.crearAlerta(req.body, res);
+    } else {
+        res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
+    }
+});
+
+rutas.get('/alerta/:correo', async (req, res)=>{
+    if (cAutenticacion.estoyAutenticado(req)) {
+        const alerta = await cConsumo.buscarAlertaCorreo(req.params.correo);
+        if(alerta){
+            return res.status(200).send({ error: false, estado: true, mensaje: "Se encontro una alerta", alerta: alerta });
+        }else{
+            res.status(400).send({ error: false, estado: false, mensaje: "No tiene alerta" });
+        }
+    } else {
+        res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
+    }
+});
+
+rutas.put('/alerta/:correo', async (req, res) => {
+    if (cAutenticacion.estoyAutenticado(req)) {
+        cConsumo.actualizarLimite(req.params.correo, req.body, res);
+    } else {
+        res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
+    }
+});
+
 
 /* CRUD CONSUMO */
 
 /* Metodo que usa el medidor inteligente para enviar el consumo registrado */
 rutas.post('/consumo', async (req, res) => {
-    console.log("-----------------Fecha des reutas--------------------");
-    console.log(req.body["fecha"]);
-    console.log(new Date().toLocaleString('en-us', { hour12: true }));
-    console.log("-----------------Fecha des reutas--------------------");
     //se usan los dos controladores, el de consumoReal e Historial.
     //Buscar cliente con el id_medidor que llega.
     const cliente = await cCliente.buscarClienteMedidor(req.body['id_medidor']);
@@ -177,9 +203,9 @@ rutas.post('/consumo', async (req, res) => {
     if (cliente) {//si existe el cliente si registra el consumo.
         //Se consulta el costo unitario
         const costoU = await cAdministrador.costoUnitario();
-
+        const limite = await cConsumo.buscarAlertaCorreo(cliente.correo);
         //cConsumo.registrarConsumoReal(req.body, res, req, costoU.costoUnitario, cliente);
-        cConsumo.registrarConsumoReal(req.body, res, req, 130, cliente);
+        cConsumo.registrarConsumoReal(req.body, res, req, 130, cliente, limite);
     } else {
         //Si no existe el cliente, no se registra el consumo.
         res.send({ error: true, estado: false, mensaje: "No existe el cliente para este id de medidor." });
