@@ -5,8 +5,8 @@ const esquema_Cliente = new mongoose.Schema({
     cedula: { type: Number, required: true},
     telefono: { type: Number },
     id_medidor: { type: Number, required: true},
-    limite: {type: Number},
-    tipoLimite: {type: Number},
+    limite: {type: Number},//Borrar
+    tipoLimite: {type: Number},//Borrar
     activo: {type: Boolean}
 });
 

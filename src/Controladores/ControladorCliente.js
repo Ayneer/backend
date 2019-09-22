@@ -1,5 +1,6 @@
 const Cliente = require('../Modelos/Cliente');
 const bcrypt = require('bcrypt-nodejs');
+const Alerta = require('../Modelos/Alerta');
 
 const ControladorCliente = {};
 
@@ -14,10 +15,8 @@ ControladorCliente.nuevoCliente = async (req, res) => {
         nuevoCliente.apellidos = req['apellidos'];
         nuevoCliente.correo = req['correo'];
         nuevoCliente.cedula = req['cedula'];
-        //nuevoCliente.telefono = req['telefono'];
         nuevoCliente.id_medidor = req['id_medidor'];
         nuevoCliente.activo = false;
-        //nuevoCliente.limite = 0;
         nuevoCliente.contraseña = bcrypt.hashSync(req['correo'], bcrypt.genSaltSync(10));
         //Se almacena el nuevo cliente
         nuevoCliente.save((err) => {
@@ -69,6 +68,10 @@ ControladorCliente.buscarClientes = function () {
     return Cliente.find({});
 }
 
+const validarContraseña = (contraseñaValidar, contraseñaUsuario) => {
+    return bcrypt.compareSync(contraseñaValidar, contraseñaUsuario);
+}
+
 ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
     //Depende del usuario que va a hacer la modificación
 
@@ -98,26 +101,32 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
                 actualizacion.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
                 actualizacion.activo = true;
             } else {
-                if (req['actualizarLimite']) {
-                    actualizacion.limite = req['limite'];
-                    actualizacion.tipoLimite = req['tipoLimite'];
-                } else {
-                    /* Todo ok, el cliente puede modificar */
-                    if (!req['contraseña'] === null) {
+                /* Todo ok, el cliente puede modificar */
+                if (req['cambiarContrasena']) {
+                    //validar contraseña principal
+                    if (validarContraseña(req['contrasena'], usuario.contraseña)) {
                         //Cambio la contraseña
-                        actualizacion.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
-                    }
-                    const cli = await Cliente.findOne({ correo: req['correo'] });
-                    if (cli) {
-                        if (cli.correo === correoR) {//No estoy actualizando el correo
-                            actualizacion.telefono = req['telefono'];
-                        } else {
-                            return res.status(401).send({ error: true, estado: false, mensaje: "El correo, ya esta en uso!" });
-                        }
+                        actualizacion.contraseña = bcrypt.hashSync(req['contrasenaNueva'], bcrypt.genSaltSync(10));
                     } else {
-                        actualizacion.correo = req['correo'];
+                        return res.status(401).send({ error: false, estado: false, mensaje: "Contraseña principal incorrecta!" });
+                    }
+                }
+
+                const cli = await Cliente.findOne({ correo: req['correo'] });
+
+                if (cli) {
+                    if (cli.correo !== correoR) {//No estoy actualizando el correo
+                        return res.status(401).send({ error: false, estado: false, mensaje: "El correo, ya esta en uso!" });
+                    } else {
                         actualizacion.telefono = req['telefono'];
                     }
+                } else {//Esta actualizando el correo
+                    //Actualizon el correo en la alerte/limite
+                    Alerta.findOneAndUpdate({ correoCliente: usuario.correo }, { correoCliente: req['correo'] }, (error) => {
+                        if (error) {console.log(error);} 
+                    });
+                    actualizacion.correo = req['correo'];
+                    actualizacion.telefono = req['telefono'];
                 }
             }
         } else {

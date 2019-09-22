@@ -100,24 +100,18 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
 
                         if (!limite.alerta_1) {//Alerta sobre el 50%
                             if (limite.tipoLimite === 0) {//Limite por kwh
-                                console.log(0.5 * (limite.limite));
-                                console.log(0.6 * (limite.limite));
                                 if (ultimoConsumo >= (0.5 * (limite.limite)) && ultimoConsumo < (0.6 * (limite.limite))) {
                                     io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
                                     //Marcar como alerta enviada
                                     cont++;
-                                    actualizacion = {
-                                        alerta_1:true
-                                    }
+                                    actualizacion = {alerta_1:true}
                                 }
                             } else {//Limite por costo
                                 if ((ultimoConsumo * costoU) >= (0.5 * (limite.limite))) {
                                     io.to(cli['idSocketCliente']).emit('limiteCosto', notificacion);
                                     //Marcar como alerta enviada
                                     cont++;
-                                    actualizacion = {
-                                        alerta_1: true
-                                    }
+                                    actualizacion = {alerta_1: true}
                                 }
                             }
                         }else{
@@ -127,18 +121,14 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
                                         io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
                                         //Marcar como alerta enviada
                                         cont++;
-                                        actualizacion = {
-                                            alerta_2: true
-                                        }
+                                        actualizacion = {alerta_2: true}
                                     }
                                 } else {//Limite por costo
                                     if ((ultimoConsumo * costoU) >= (0.6 * (limite.limite))) {
                                         io.to(cli['idSocketCliente']).emit('limiteCosto', notificacion);
                                         //Marcar como alerta enviada
                                         cont++;
-                                        actualizacion = {
-                                            alerta_2: true
-                                        }
+                                        actualizacion = {alerta_2: true}
                                     }
                                 }
                             }else{
@@ -148,18 +138,14 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
                                             io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
                                             //Marcar como alerta enviada
                                             cont++;
-                                            actualizacion = {
-                                                alerta_3: true
-                                            }
+                                            actualizacion = {alerta_3: true}
                                         }
                                     } else {//Limite por costo
                                         if ((ultimoConsumo * costoU) >= (0.7 * (limite.limite))) {
                                             io.to(cli['idSocketCliente']).emit('limiteCosto', notificacion);
                                             //Marcar como alerta enviada
                                             cont++;
-                                            actualizacion = {
-                                                alerta_3: true
-                                            }
+                                            actualizacion = {alerta_3: true}
                                         }
                                     }
                                 }else{
@@ -169,18 +155,14 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
                                                 io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
                                                 //Marcar como alerta enviada
                                                 cont++;
-                                                actualizacion = {
-                                                    alerta_4: true
-                                                }
+                                                actualizacion = {alerta_4: true}
                                             }
                                         } else {//Limite por costo
                                             if ((ultimoConsumo * costoU) >= (0.8 * (limite.limite))) {
                                                 io.to(cli['idSocketCliente']).emit('limiteCosto', notificacion);
                                                 //Marcar como alerta enviada
                                                 cont++;
-                                                actualizacion = {
-                                                    alerta_4: true
-                                                }
+                                                actualizacion = {alerta_4: true}
                                             }
                                         }
                                     }else{
@@ -190,18 +172,14 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
                                                     io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
                                                     //Marcar como alerta enviada
                                                     cont++;
-                                                    actualizacion = {
-                                                        alerta_5: true
-                                                    }
+                                                    actualizacion = {alerta_5: true}
                                                 }
                                             } else {//Limite por costo
                                                 if ((ultimoConsumo * costoU) >= (0.9 * (limite.limite))) {
                                                     io.to(cli['idSocketCliente']).emit('limiteCosto', notificacion);
                                                     //Marcar como alerta enviada
                                                     cont++;
-                                                    actualizacion = {
-                                                        alerta_5: true
-                                                    }
+                                                    actualizacion = {alerta_5: true}
                                                 }
                                             }
                                         }
