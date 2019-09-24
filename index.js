@@ -32,7 +32,7 @@ app.use(cors({
     'allowedHeaders': ['sessionId', 'Content-Type'],
     'exposedHeaders': ['sessionId'],
     'credentials': true,
-    'origin': ['http://localhost:3000', 'http://192.168.1.69:3000']
+    'origin': ['http://localhost:3000', 'http://192.168.1.69:3000', 'http://192.168.1.61:3000']
 }));
 //app.use(cookieParser('secretoLlave'));
 app.use(session({
