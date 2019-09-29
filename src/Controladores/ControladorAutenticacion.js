@@ -27,7 +27,13 @@ ControladorAutenticacion.iniciarSesion = function (req, res, next, clientesActiv
                         } else {//Si no hubo error al loggear con passport
                             /* Se responde con exito al usuario*/
                             console.log("Nueva sesion iniciada");
-                            return res.status(200).send({usuario: usuario, activo: respuesta.activo, Error: false, Estado: true, Mensaje: "Sesion iniciada correctamente. Si eres cliente, por favor enviar correo por socket." });
+                            var admin = false;
+                            if(usuario.correo === "admin@energia.com"){
+
+                                var admin = true;
+
+                            }
+                            return res.status(200).send({usuario: usuario, activo: respuesta.activo, Error: false, Estado: true, admin, Mensaje: "Sesion iniciada correctamente. Si eres cliente, por favor enviar correo por socket." });
                         }
                     });
                 } else {

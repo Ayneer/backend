@@ -99,6 +99,7 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
                         let actualizacion;
 
                         if (!limite.alerta_1) {//Alerta sobre el 50%
+                            notificacion.mensaje = "Alerta: Has superado el 50% de tu limite";
                             if (limite.tipoLimite === 0) {//Limite por kwh
                                 if (ultimoConsumo >= (0.5 * (limite.limite)) && ultimoConsumo < (0.6 * (limite.limite))) {
                                     io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
@@ -115,7 +116,8 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
                                 }
                             }
                         }else{
-                            if (!limite.alerta_2) {//Alerta sobre el 50%
+                            if (!limite.alerta_2) {//Alerta sobre el 60%
+                                notificacion.mensaje = "Alerta: Has superado el 60% de tu limite";
                                 if (limite.tipoLimite === 0) {//Limite por kwh
                                     if (ultimoConsumo >= (0.6 * (limite.limite)) && ultimoConsumo < (0.7 * (limite.limite))) {
                                         io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
@@ -132,7 +134,8 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
                                     }
                                 }
                             }else{
-                                if (!limite.alerta_3) {//Alerta sobre el 50%
+                                if (!limite.alerta_3) {//Alerta sobre el 70%
+                                    notificacion.mensaje = "Alerta: Has superado el 70% de tu limite";
                                     if (limite.tipoLimite === 0) {//Limite por kwh
                                         if (ultimoConsumo >= (0.7 * (limite.limite)) && ultimoConsumo < (0.8 * (limite.limite))) {
                                             io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
@@ -149,7 +152,8 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
                                         }
                                     }
                                 }else{
-                                    if (!limite.alerta_4) {//Alerta sobre el 50%
+                                    if (!limite.alerta_4) {//Alerta sobre el 80%
+                                        notificacion.mensaje = "Alerta: Has superado el 80% de tu limite";
                                         if (limite.tipoLimite === 0) {//Limite por kwh
                                             if (ultimoConsumo >= (0.8 * (limite.limite)) && ultimoConsumo < (0.9 * (limite.limite))) {
                                                 io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
@@ -166,7 +170,8 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
                                             }
                                         }
                                     }else{
-                                        if (!limite.alerta_5) {//Alerta sobre el 50%
+                                        if (!limite.alerta_5) {//Alerta sobre el > 90%
+                                            notificacion.mensaje = "Alerta: Has superado mas del 90% de tu limite";
                                             if (limite.tipoLimite === 0) {//Limite por kwh
                                                 if (ultimoConsumo >= (0.9 * (limite.limite))) {
                                                     io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);

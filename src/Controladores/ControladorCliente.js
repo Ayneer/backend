@@ -10,24 +10,31 @@ ControladorCliente.nuevoCliente = async (req, res) => {
     const clienteMedidor = await Cliente.findOne({ id_medidor: req['id_medidor'] });
     if (!cliente && !clienteMedidor) {
         /* Si no existe el cliente, se podrá registrar */
-        const nuevoCliente = new Cliente();
-        nuevoCliente.nombre = req['nombre'];
-        nuevoCliente.apellidos = req['apellidos'];
-        nuevoCliente.correo = req['correo'];
-        nuevoCliente.cedula = req['cedula'];
-        nuevoCliente.id_medidor = req['id_medidor'];
-        nuevoCliente.activo = false;
-        nuevoCliente.contraseña = bcrypt.hashSync(req['correo'], bcrypt.genSaltSync(10));
-        //Se almacena el nuevo cliente
-        nuevoCliente.save((err) => {
-            if (err) {
-                console.log('error al registrar: ', err);
-                return res.status(500).send({ error: true, estado: false, mensaje: "Debe completar todos los campos requeridos!" });
-            } else {
-                console.log('registrado!');
-                return res.status(200).send({ error: false, estado: true, mensaje: "Registro exitoso!" });
-            }
-        });
+        if (req['correo'] !== 'admin@energia.com') {
+            const nuevoCliente = new Cliente();
+            nuevoCliente.nombre = req['nombre'];
+            nuevoCliente.apellidos = req['apellidos'];
+            nuevoCliente.correo = req['correo'];
+            nuevoCliente.cedula = req['cedula'];
+            nuevoCliente.id_medidor = req['id_medidor'];
+            nuevoCliente.activo = false;
+            nuevoCliente.contraseña = bcrypt.hashSync(req['correo'], bcrypt.genSaltSync(10));
+            //Se almacena el nuevo cliente
+            nuevoCliente.save((err) => {
+                if (err) {
+                    console.log('error al registrar: ', err);
+                    return res.status(500).send({ error: true, estado: false, mensaje: "Debe completar todos los campos requeridos!" });
+                } else {
+                    console.log('registrado!');
+                    return res.status(200).send({ error: false, estado: true, mensaje: "Registro exitoso!" });
+                }
+            });
+
+
+        } else {
+            return res.status(401).send({ error: false, estado: false, mensaje: "El correo y/o medidor ya esta en uso." });
+        }
+
     } else {
         //Ya existe el cliente
         return res.status(401).send({ error: false, estado: false, mensaje: "El correo y/o medidor ya esta en uso." });
@@ -123,7 +130,7 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
                 } else {//Esta actualizando el correo
                     //Actualizon el correo en la alerte/limite
                     Alerta.findOneAndUpdate({ correoCliente: usuario.correo }, { correoCliente: req['correo'] }, (error) => {
-                        if (error) {console.log(error);} 
+                        if (error) { console.log(error); }
                     });
                     actualizacion.correo = req['correo'];
                     actualizacion.telefono = req['telefono'];
@@ -140,24 +147,13 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
             actualizacion.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
         } else {
             if (req['mod'] === "modA2") {
-                //Actualizar datos criticos
+                //Actualizar id medidor
                 const cli = await Cliente.findOne({ id_medidor: req['id_medidor'] });
                 if (cli) {
-                    if (cli.correo === correoR) {//El id_medidor no se esta actualizando.
-                        actualizacion.nombre = req['nombre'];
-                        actualizacion.apellidos = req['apellido'];
-                        actualizacion.cedula = req['cedula'];
-                        actualizacion.id_medidor = req['id_medidor'];
-                    } else {
-                        return res.status(401).send({ error: true, estado: false, mensaje: "El id de medidor, ya esta siendo utilizado por otro cliente!" });
-                    }
-                } else {//No esta ocupado el id de medidor, se puede hacer la actualización
-                    actualizacion.nombre = req['nombre'];
-                    actualizacion.apellidos = req['apellido'];
-                    actualizacion.cedula = req['cedula'];
+                    return res.status(401).send({ error: true, estado: false, mensaje: "El id de medidor, ya esta siendo utilizado por otro cliente!" });
+                } else {
                     actualizacion.id_medidor = req['id_medidor'];
                 }
-
             } else {
                 return res.status(401).send({ error: true, estado: false, mensaje: "Accion desconocida!" });
             }
