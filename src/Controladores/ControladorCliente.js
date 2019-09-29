@@ -123,7 +123,7 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
 
                 if (cli) {
                     if (cli.correo !== correoR) {//No estoy actualizando el correo
-                        return res.status(401).send({ error: false, estado: false, mensaje: "El correo, ya esta en uso!" });
+                        return res.status(401).send({ error: false, estado: false, mensaje: "El correo ya esta en uso!" });
                     } else {
                         actualizacion.telefono = req['telefono'];
                     }
@@ -150,7 +150,7 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
                 //Actualizar id medidor
                 const cli = await Cliente.findOne({ id_medidor: req['id_medidor'] });
                 if (cli) {
-                    return res.status(401).send({ error: true, estado: false, mensaje: "El id de medidor, ya esta siendo utilizado por otro cliente!" });
+                    return res.status(401).send({ error: true, estado: false, mensaje: "El id de medidor, ya esta en uso!" });
                 } else {
                     actualizacion.id_medidor = req['id_medidor'];
                 }

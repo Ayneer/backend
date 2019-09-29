@@ -11,8 +11,6 @@ const cConsumo = require('../Controladores/ControladorConsumo');
 rutas.post('/iniciarSesion', async (req, res, next) => {
     console.log("nuevo intento de iniciar sesion");
     console.log(req.body);
-    const cliente = await cCliente.buscarClienteCorreo(req.body['correo']);
-    const admin = await cAdministrador.buscarAdministradorCorreo(req.body['correo']);
 
     console.log(req.user);
     if (!cAutenticacion.estoyAutenticado(req)) {
@@ -43,15 +41,11 @@ rutas.get('/estoyAutenticado', (req, res) => {
         res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
     } else {
         console.log("Estoy autenticado.");
-        let socket = null;
-        req.app.get('clientesActivos').forEach((cli) => {
-
-            if (cli['correo_cliente'] === req.user.correo) {
-                socket = cli['idSocketCliente'];
-            }
-
-        });
-        res.status(200).send({ error: false, estado: true, mensaje: "Sesion activa correctamente.", usuario: req.user, socket: socket });
+        var admin = false;
+        if (req.user.correo === "admin@energia.com") {
+            var admin = true;
+        }
+        res.status(200).send({ error: false, estado: true, mensaje: "Sesion activa correctamente.", usuario: req.user, admin });
     }
 });
 
@@ -170,12 +164,12 @@ rutas.post('/alerta', (req, res) => {
     }
 });
 
-rutas.get('/alerta/:correo', async (req, res)=>{
+rutas.get('/alerta/:correo', async (req, res) => {
     if (cAutenticacion.estoyAutenticado(req)) {
         const alerta = await cConsumo.buscarAlertaCorreo(req.params.correo);
-        if(alerta){
+        if (alerta) {
             return res.status(200).send({ error: false, estado: true, mensaje: "Se encontro una alerta", alerta: alerta });
-        }else{
+        } else {
             res.status(400).send({ error: false, estado: false, mensaje: "No tiene alerta" });
         }
     } else {
