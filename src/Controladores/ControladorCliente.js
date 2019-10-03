@@ -145,6 +145,7 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
         if (req['mod'] === "modA1") {
             //Recuperar contraseña 
             actualizacion.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
+            actualizacion.activo = false;
         } else {
             if (req['mod'] === "modA2") {
                 //Actualizar id medidor
