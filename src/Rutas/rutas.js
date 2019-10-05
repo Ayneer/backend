@@ -77,13 +77,35 @@ rutas.delete('/cliente/:correo', (req, res) => {
 
 });
 
-rutas.put('/cliente/:correo', (req, res) => {
-    console.log("entro****************************");
+rutas.put('/cliente/:correo', async (req, res) => {
     if (cAutenticacion.estoyAutenticado(req)) {
-        console.log("entro 3****************************");
-        cCliente.actualizarCliente(req.params.correo, req.body, res, req.user);
+        //mod = modificacion | modA2 = modificacion del administrador numero 2 (Actualizacion del ID del medidor)
+        if (req.body['mod'] && req.body['mod'] === "modA2") {
+            //Se verifica si ya existe algun usuario que este usando el Id de medidor que se desea aplicar en la actualizacion.
+            const cliente = await cCliente.buscarClienteMedidor(req.body['id_medidor']);
+            if (cliente) {
+                //Si existe el cliente entoces no se podra realizar la actualizacion
+                return res.status(401).send({ error: true, estado: false, mensaje: "El id de medidor, ya esta en uso!" });
+            } else {
+                const clienteActualizar = await cCliente.buscarClienteCorreo(req.params.correo);
+                //Actualizar limite en el modelo Alerta y Cliente
+                const actLimiteCliente = await cCliente.actualizarIDMedidor(req.params.correo, req.body['id_medidor']);
+                if (actLimiteCliente) {
+                    //Actualizar limite en el modelo ConsumoReal e Historia
+                    if (await cConsumo.actualizarIDMedidor(clienteActualizar.id_medidor, req.body['id_medidor'])) {
+                        return res.status(200).send({error: false, estado: true, mensaje: "Id de medidor actualizado con exito!"});
+                    }else{
+                        return res.status(401).send({ error: true, estado: false, mensaje: "Error al actualizar en ConsumoReal e Historial"});
+                    }
+                }else{
+                    return res.status(401).send({ error: true, estado: false, mensaje: "Error al actualizar en cliente"});
+                }
+            }
+
+        }else{
+            cCliente.actualizarCliente(req.params.correo, req.body, res, req.user);
+        }
     } else {
-        console.log("entro 2 ****************************");
         res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
     }
 });

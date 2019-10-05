@@ -79,6 +79,19 @@ const validarContraseña = (contraseñaValidar, contraseñaUsuario) => {
     return bcrypt.compareSync(contraseñaValidar, contraseñaUsuario);
 }
 
+ControladorCliente.actualizarIDMedidor = async (correo, id_medidorNuevo) => {
+    //Actualizar limite en el modelo Cliente
+    let estado = null;
+    await Cliente.findOneAndUpdate({correo:correo}, {id_medidor:id_medidorNuevo}, (error, doc)=>{
+        if(error){
+            estado =  false;
+        }else if (doc){
+            estado = true;
+        } 
+    });
+    return estado;
+}
+
 ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
     //Depende del usuario que va a hacer la modificación
 
@@ -146,19 +159,20 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
             //Recuperar contraseña 
             actualizacion.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
             actualizacion.activo = false;
-        } else {
-            if (req['mod'] === "modA2") {
-                //Actualizar id medidor
-                const cli = await Cliente.findOne({ id_medidor: req['id_medidor'] });
-                if (cli) {
-                    return res.status(401).send({ error: true, estado: false, mensaje: "El id de medidor, ya esta en uso!" });
-                } else {
-                    actualizacion.id_medidor = req['id_medidor'];
-                }
-            } else {
-                return res.status(401).send({ error: true, estado: false, mensaje: "Accion desconocida!" });
-            }
-        }
+        } 
+        // else {
+        //     if (req['mod'] === "modA2") {
+        //         //Actualizar id medidor
+        //         const cli = await Cliente.findOne({ id_medidor: req['id_medidor'] });
+        //         if (cli) {
+        //             return res.status(401).send({ error: true, estado: false, mensaje: "El id de medidor, ya esta en uso!" });
+        //         } else {
+        //             actualizacion.id_medidor = req['id_medidor'];
+        //         }
+        //     } else {
+        //         return res.status(401).send({ error: true, estado: false, mensaje: "Accion desconocida!" });
+        //     }
+        // }
     }
     if (correoR != null) {
         await Cliente.findOneAndUpdate({ correo: correoR }, actualizacion, function (error, cliente) {
