@@ -4,24 +4,78 @@ const Alerta = require('../Modelos/Alerta');
 
 const ControladorConsumo = {};
 
-ControladorConsumo.actualizarIDMedidor = async (id_medidorAnterior, id_medidorNuevo) => {
+ControladorConsumo.eliminarClienteAlerta = async (correo) => {
     let estado = null;
-
-    await ConsumoReal.findOneAndUpdate({ id_medidor: id_medidorAnterior }, { id_medidor: id_medidorNuevo }, async (error, doc) => {
-        if (error) {
-            estado = false;
-        } else if (doc) {
-            await Historial.findOneAndUpdate({ id_medidor: id_medidorAnterior }, { id_medidor: id_medidorNuevo }, (errorH, docH) => {
-                if (errorH) {
-                    estado = false;
-                } else if(docH) {
-                    estado = true;
-                }
-            })
+    await Alerta.findOneAndDelete({correoCliente: correo}, (error, doc)=>{
+        if(error){
+            estado=false;
+        }else if(doc){
+            estado=true;
         }
     });
     return estado;
 }
+
+ControladorConsumo.reestablecerAlertas = async (correo) => {
+    let estado= null;
+    await Alerta.findOneAndUpdate({correoCliente: correo}, {alerta_1:false, alerta_2: false, alerta_3:false, alerta_4:false, alerta_5: false}, (error, doc)=>{
+        if(error){
+            estado = false;
+        }else if(doc){
+            estado = true;
+        }
+    });
+    return estado;
+}
+
+ControladorConsumo.eliminarClienteConsumoReal = async (id_medidor) => {
+    let estado = null;
+    await ConsumoReal.findOneAndDelete({id_medidor: id_medidor}, (error, doc)=>{
+        if(error){
+            estado=false;
+        }else if(doc){
+            estado=true;
+        }
+    });
+    return estado;
+}
+
+ControladorConsumo.eliminarClienteHistorial = async (id_medidor) => {
+    let estado = null;
+    await Historial.deleteMany({id_medidor: id_medidor}, (error, doc)=>{
+        if(error){
+            estado=false;
+        }else if(doc){
+            estado=true;
+        }
+    });
+    return estado;
+}
+
+ControladorConsumo.actualizarIDMedidorCReal = async (id_medidor, nuevoId) => {
+    let estado = null;
+    ConsumoReal.updateMany({id_medidor: id_medidor}, {id_medidor: nuevoId}, (error, doc)=>{
+        if(error){
+            estado = false;
+        }else if(doc){
+            estado=true;
+        }
+    })
+    return estado;
+}
+
+ControladorConsumo.actualizarIDMedidorHistorial = async (id_medidor, nuevoId) => {
+    let estado = null;
+    Historial.updateMany({id_medidor: id_medidor}, {id_medidor: nuevoId}, (error, doc)=>{
+        if(error){
+            estado = false;
+        }else if(doc){
+            estado=true;
+        }
+    })
+    return estado;
+}
+
 
 ControladorConsumo.buscarAlertaCorreo = (correo) => {
     return Alerta.findOne({ correoCliente: correo });
@@ -310,8 +364,9 @@ ControladorConsumo.registrarConsumoReal = async function (body, res, req, costoU
             if (resta > 0) {//Inicio de nuevo mes
 
                 console.log("nuevo mes!");
+                //reestablece las alertas
+                await this.reestablecerAlertas(cliente.correo);
 
-                /*  consumoReal.totalConsumo = Total de consumo de los meses anteriores. */
                 if (consumoReal.totalConsumo === 0) {//A penas segundo mes de consumo
                     consumoReal.totalConsumo = consumoReal.consumoMes;
                 } else {

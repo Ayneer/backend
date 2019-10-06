@@ -41,25 +41,22 @@ ControladorCliente.nuevoCliente = async (req, res) => {
     }
 }
 
-ControladorCliente.eliminarCliente = async (correoR, res, correoUsuario) => {
+ControladorCliente.eliminarCliente = async (correo) => {
 
-    if (await Cliente.findOne({ correo: correoUsuario })) {
-        return res.status(401).send({ error: true, estado: false, mensaje: "Accion denegada!!" });
-    } else {
-        await Cliente.findOneAndRemove({ correo: correoR }, (error, cliente) => {
-            if (error) {
-                return res.status(500).send({ error: true, estado: false, mensaje: "Error #4 en el sistema, intente mas tarde." });
-            } else {
-                if (!cliente) {
-                    return res.status(401).send({ error: false, estado: false, mensaje: "No existe un cliente con el correo: " + correoR + " !" });
-                } else {
-                    console.log('Eliminado!');
-                    return res.status(200).send({ error: false, estado: true, mensaje: "Registro eliminado!" });
-                }
+    let estado = null;
+    await Cliente.findOneAndRemove({ correo: correo }, (error, cliente) => {
+        if (error) {
+            estado = false;
+            //return res.status(500).send({ error: true, estado: false, mensaje: "Error #4 en el sistema, intente mas tarde." });
+        } else {
+            if (cliente) {
+                estado = true;
+                //return res.status(401).send({ error: false, estado: false, mensaje: "No existe un cliente con el correo: " + correoR + " !" });
             }
-        });
-    }
+        }
+    });
 
+    return estado;
 
 }
 
@@ -82,12 +79,12 @@ const validarContraseña = (contraseñaValidar, contraseñaUsuario) => {
 ControladorCliente.actualizarIDMedidor = async (correo, id_medidorNuevo) => {
     //Actualizar limite en el modelo Cliente
     let estado = null;
-    await Cliente.findOneAndUpdate({correo:correo}, {id_medidor:id_medidorNuevo}, (error, doc)=>{
-        if(error){
-            estado =  false;
-        }else if (doc){
+    await Cliente.findOneAndUpdate({ correo: correo }, { id_medidor: id_medidorNuevo }, (error, doc) => {
+        if (error) {
+            estado = false;
+        } else if (doc) {
             estado = true;
-        } 
+        }
     });
     return estado;
 }
@@ -159,20 +156,7 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
             //Recuperar contraseña 
             actualizacion.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
             actualizacion.activo = false;
-        } 
-        // else {
-        //     if (req['mod'] === "modA2") {
-        //         //Actualizar id medidor
-        //         const cli = await Cliente.findOne({ id_medidor: req['id_medidor'] });
-        //         if (cli) {
-        //             return res.status(401).send({ error: true, estado: false, mensaje: "El id de medidor, ya esta en uso!" });
-        //         } else {
-        //             actualizacion.id_medidor = req['id_medidor'];
-        //         }
-        //     } else {
-        //         return res.status(401).send({ error: true, estado: false, mensaje: "Accion desconocida!" });
-        //     }
-        // }
+        }
     }
     if (correoR != null) {
         await Cliente.findOneAndUpdate({ correo: correoR }, actualizacion, function (error, cliente) {

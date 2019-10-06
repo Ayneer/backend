@@ -94,16 +94,33 @@ ControladorAdministrador.buscarAdministradorCorreo = function (correoABuscar) {
 }
 
 ControladorAdministrador.definirCostoUnitario = async function (nuevoCosto, res) {
-    await Sistema.updateMany({}, { $set: { costoUnitario: nuevoCosto } }, (error) => {
-        if (error) {
-            return res.status(500).send({ error: true, estado: false, mensaje: "Error al guardar el costo" });
-        } else {
-            return res.status(200).send({ error: false, estado: true, mensaje: "Nuevo costo guardado" });
-        }
-    });
+    const sistema = await Sistema.findOne({});
+    if(sistema){
+        console.log(sistema);
+        await Sistema.updateMany({}, { costoUnitario: nuevoCosto }, (error) => {
+            if (error) {
+                return res.status(500).send({ error: true, estado: false, mensaje: "Error al guardar el costo" });
+            } else {
+                console.log("actualizado")
+                return res.status(200).send({ error: false, estado: true, mensaje: "Nuevo costo guardado" });
+            }
+        });
+    }else{
+        const nuevoSistema = new Sistema();
+        nuevoSistema.costoUnitario = nuevoCosto;
+        nuevoSistema.save((error)=>{
+            if(error){
+                return res.status(500).send({ error: true, estado: false, mensaje: "Error al guardar el costo" });
+            }else{
+                console.log("guardado")
+                return res.status(200).send({ error: false, estado: true, mensaje: "Nuevo costo guardado" });
+            }
+        })
+    }
+    
 }
 
-ControladorAdministrador.costoUnitario = function(){
+ControladorAdministrador.obtenerDatosSistema = function(){
     return Sistema.findOne({});
 }
 module.exports = ControladorAdministrador;

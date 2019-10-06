@@ -68,9 +68,35 @@ rutas.post('/cliente', async (req, res) => {
     }
 });
 
-rutas.delete('/cliente/:correo', (req, res) => {
+rutas.delete('/cliente/:correo', async (req, res) => {
     if (cAutenticacion.estoyAutenticado(req)) {
-        cCliente.eliminarCliente(req.params.correo, res, req.user.correo);
+        const esAdministrador = await cAdministrador.buscarAdministradorCorreo(req.user.correo);
+        const cliente = await cCliente.buscarClienteCorreo(req.params.correo);
+        if( esAdministrador && cliente ){
+            const operacionCliente = await cCliente.eliminarCliente(req.params.correo);
+            if(operacionCliente){
+                const operacionAlerta = await cConsumo.eliminarClienteAlerta(req.params.correo);
+                if(operacionAlerta === true || operacionAlerta === null){
+                    const operacionConsumoReal = await cConsumo.eliminarClienteConsumoReal(cliente.id_medidor);
+                    if(operacionConsumoReal === true || operacionConsumoReal === null){
+                        const operacionHistorial = await cConsumo.eliminarClienteHistorial(cliente.id_medidor);
+                        if(operacionHistorial === true || operacionHistorial === null){
+                            return res.status(200).send({ error: false, estado: true, mensaje: "Cliente eliminado con exito!" });
+                        }else{
+                            return res.status(500).send({ error: true, estado: false, mensaje: "Error en el sistema al intentar eliminar al cliente, por favor intente mas tarde." });
+                        }
+                    }else{
+                        return res.status(500).send({ error: true, estado: false, mensaje: "Error en el sistema al intentar eliminar al cliente, por favor intente mas tarde." });
+                    }
+                }else{
+                    return res.status(500).send({ error: true, estado: false, mensaje: "Error en el sistema al intentar eliminar al cliente, por favor intente mas tarde." });
+                }
+            }else{
+                return res.status(500).send({ error: true, estado: false, mensaje: "Error en el sistema al intentar eliminar al cliente, por favor intente mas tarde." });
+            }
+        }else{
+            return res.status(401).send({ error: true, estado: false, mensaje: "No se pudo completar la operación, no existe el cliente o no eres adminisytador." });
+        }
     } else {
         res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
     }
@@ -88,12 +114,19 @@ rutas.put('/cliente/:correo', async (req, res) => {
                 return res.status(401).send({ error: true, estado: false, mensaje: "El id de medidor, ya esta en uso!" });
             } else {
                 const clienteActualizar = await cCliente.buscarClienteCorreo(req.params.correo);
-                //Actualizar limite en el modelo Alerta y Cliente
-                const actLimiteCliente = await cCliente.actualizarIDMedidor(req.params.correo, req.body['id_medidor']);
-                if (actLimiteCliente) {
-                    //Actualizar limite en el modelo ConsumoReal e Historia
-                    if (await cConsumo.actualizarIDMedidor(clienteActualizar.id_medidor, req.body['id_medidor'])) {
-                        return res.status(200).send({error: false, estado: true, mensaje: "Id de medidor actualizado con exito!"});
+                //Actualizar Id medidor en el modelo Alerta, ConsumoReal, Historial y Cliente
+                //Cliente
+                const actIDMedidorCliente = await cCliente.actualizarIDMedidor(req.params.correo, req.body['id_medidor']);
+                if (actIDMedidorCliente) {
+                    //ConsumoReal
+                    const estadoCReal = await cConsumo.actualizarIDMedidorCReal(clienteActualizar.id_medidor, req.body['id_medidor']);
+                    if (estadoCReal === true || estadoCReal === null) {
+                        const estadoHistorial = await cConsumo.actualizarIDMedidorHistorial(clienteActualizar.id_medidor, req.body['id_medidor']);
+                        if(estadoHistorial === true || estadoHistorial === null){
+                            return res.status(200).send({error: false, estado: true, mensaje: "ID de medidor actualizado con exito!"});
+                        }else{
+                            return res.status(401).send({ error: true, estado: false, mensaje: "Error al actualizar en ConsumoReal e Historial"});
+                        }
                     }else{
                         return res.status(401).send({ error: true, estado: false, mensaje: "Error al actualizar en ConsumoReal e Historial"});
                     }
@@ -218,10 +251,13 @@ rutas.post('/consumo', async (req, res) => {
 
     if (cliente) {//si existe el cliente si registra el consumo.
         //Se consulta el costo unitario
-        const costoU = await cAdministrador.costoUnitario();
+        const sistema = await cAdministrador.obtenerDatosSistema();
+        let costoU = 0;
+        if(sistema){
+            costoU = sistema.costoUnitario;
+        }
         const limite = await cConsumo.buscarAlertaCorreo(cliente.correo);
-        //cConsumo.registrarConsumoReal(req.body, res, req, costoU.costoUnitario, cliente);
-        cConsumo.registrarConsumoReal(req.body, res, req, 130, cliente, limite);
+        cConsumo.registrarConsumoReal(req.body, res, req, costoU, cliente, limite);
     } else {
         //Si no existe el cliente, no se registra el consumo.
         res.send({ error: true, estado: false, mensaje: "No existe el cliente para este id de medidor." });

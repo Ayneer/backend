@@ -4,4 +4,4 @@ const esquema_Sistema = new mongoose.Schema({
     costoUnitario: { type: Number, required: true}
 });
 
-module.exports = mongoose.model('Sistemas', esquema_Sistema);
+module.exports = mongoose.model('sistemas', esquema_Sistema);
