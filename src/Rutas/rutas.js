@@ -9,10 +9,7 @@ const cConsumo = require('../Controladores/ControladorConsumo');
 
 /* SESION */
 rutas.post('/iniciarSesion', async (req, res, next) => {
-    console.log("nuevo intento de iniciar sesion");
     console.log(req.body);
-
-    console.log(req.user);
     if (!cAutenticacion.estoyAutenticado(req)) {
         res.setHeader('Access-Control-Allow-Credentials', 'true');
         cAutenticacion.iniciarSesion(req, res, next, req.app.get('clientesActivos'));
@@ -20,9 +17,6 @@ rutas.post('/iniciarSesion', async (req, res, next) => {
         console.log(req.sessionID);
         res.status(401).send({ error: false, estado: true, mensaje: "Ya estas autenticado." });
     }
-    // }else{
-    //     res.status(401).send({ error: false, estado: false, mensaje: "No estas registrado en el sistema." });
-    // }
 
 });
 

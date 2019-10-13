@@ -94,7 +94,7 @@ ControladorAdministrador.buscarAdministradorCorreo = function (correoABuscar) {
 }
 
 ControladorAdministrador.definirCostoUnitario = async function (nuevoCosto, res) {
-    const sistema = await Sistema.findOne({});
+    const sistema = await Sistema.findOne({});                                    
     if(sistema){
         console.log(sistema);
         await Sistema.updateMany({}, { costoUnitario: nuevoCosto }, (error) => {

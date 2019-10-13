@@ -32,7 +32,7 @@ app.use(cors({
     'allowedHeaders': ['sessionId', 'Content-Type'],
     'exposedHeaders': ['sessionId'],
     'credentials': true,
-    'origin': ['http://localhost:3000', 'http://192.168.1.69:3000', 'http://192.168.1.61:3000']
+    'origin': ['http://localhost:3000','http://localhost:3001', 'http://192.168.1.69:3000', 'http://192.168.1.61:3000','http://192.168.1.69:3001']
 }));
 //app.use(cookieParser('secretoLlave'));
 app.use(session({
@@ -99,7 +99,7 @@ io.on('connection', function (clienteSocket) {
         console.log("clientes activos: ");
         console.log(app.get('clientesActivos'));
     });
-
+//borrar
     clienteSocket.on('actualizarSocket', (mi_correo) => {
         console.log("Actualizando socket..");
         for (var i = 0; i < app.get('clientesActivos').length; i++) {
