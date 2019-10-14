@@ -107,7 +107,9 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
     */
     const actualizacion = {};
 
-    if (await Cliente.findOne({ correo: usuario.correo })) {
+    const cliente = await Cliente.findOne({ correo: usuario.correo });
+
+    if (cliente) {
         /* Si entra, es porque el usuario que intenta actualizar a este
         cliente es un mismo cliente. Ahora, un cliente se puede 
         actualizar a si mismo, pero no a otro. */
@@ -117,6 +119,10 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
                 //Cambio la contraseña
                 actualizacion.contraseña = bcrypt.hashSync(req['contraseña'], bcrypt.genSaltSync(10));
                 actualizacion.activo = true;
+                cliente = {
+                    ...cliente,
+                    activo : true
+                }
             } else {
                 /* Todo ok, el cliente puede modificar */
                 if (req['cambiarContrasena']) {
@@ -159,15 +165,15 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
         }
     }
     if (correoR != null) {
-        await Cliente.findOneAndUpdate({ correo: correoR }, actualizacion, function (error, cliente) {
+        await Cliente.findOneAndUpdate({ correo: correoR }, actualizacion, function (error, clienteEncontrado) {
 
             if (error) {
                 return res.status(500).send({ error: true, estado: false, mensaje: "Error #5 en el sistema, intente mas tarde." });
             } else {
-                if (!cliente) {
+                if (!clienteEncontrado) {
                     return res.status(401).send({ error: false, estado: false, mensaje: "No existe un cliente con el correo: " + correoR + " !" });
                 } else {
-                    return res.status(200).send({ error: false, estado: true, mensaje: "Registro actualizado", cliente });
+                    return res.status(200).send({ error: false, estado: true, mensaje: "Registro actualizado", cliente});
                 }
             }
         });
