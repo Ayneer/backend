@@ -167,7 +167,7 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
                 if (!cliente) {
                     return res.status(401).send({ error: false, estado: false, mensaje: "No existe un cliente con el correo: " + correoR + " !" });
                 } else {
-                    return res.status(200).send({ error: false, estado: true, mensaje: "Registro actualizado!", cliente });
+                    return res.status(200).send({ error: false, estado: true, mensaje: "Registro actualizado", cliente });
                 }
             }
         });
