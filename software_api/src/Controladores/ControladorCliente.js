@@ -107,7 +107,7 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
     */
     const actualizacion = {};
 
-    const cliente = await Cliente.findOne({ correo: usuario.correo });
+    let cliente = await Cliente.findOne({ correo: usuario.correo });
 
     if (cliente) {
         /* Si entra, es porque el usuario que intenta actualizar a este
