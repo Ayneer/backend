@@ -150,7 +150,7 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
 
                 const io = req.app.get('socketio');
 
-                io.to(cli['idSocketCliente']).emit('consumoReal', ultimoConsumo);
+                io.to(cli['idSocketCliente']).emit('consumoReal', {ultimoConsumo, costoU});
 
                 //Ahora se verifica si el cliente definio algun tipo de limite
                 if (limite) {

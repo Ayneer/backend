@@ -66,29 +66,29 @@ rutas.delete('/cliente/:correo', async (req, res) => {
     if (cAutenticacion.estoyAutenticado(req)) {
         const esAdministrador = await cAdministrador.buscarAdministradorCorreo(req.user.correo);
         const cliente = await cCliente.buscarClienteCorreo(req.params.correo);
-        if( esAdministrador && cliente ){
+        if (esAdministrador && cliente) {
             const operacionCliente = await cCliente.eliminarCliente(req.params.correo);
-            if(operacionCliente){
+            if (operacionCliente) {
                 const operacionAlerta = await cConsumo.eliminarClienteAlerta(req.params.correo);
-                if(operacionAlerta === true || operacionAlerta === null){
+                if (operacionAlerta === true || operacionAlerta === null) {
                     const operacionConsumoReal = await cConsumo.eliminarClienteConsumoReal(cliente.id_medidor);
-                    if(operacionConsumoReal === true || operacionConsumoReal === null){
+                    if (operacionConsumoReal === true || operacionConsumoReal === null) {
                         const operacionHistorial = await cConsumo.eliminarClienteHistorial(cliente.id_medidor);
-                        if(operacionHistorial === true || operacionHistorial === null){
+                        if (operacionHistorial === true || operacionHistorial === null) {
                             return res.status(200).send({ error: false, estado: true, mensaje: "Cliente eliminado con exito!" });
-                        }else{
+                        } else {
                             return res.status(500).send({ error: true, estado: false, mensaje: "Error en el sistema al intentar eliminar al cliente, por favor intente mas tarde." });
                         }
-                    }else{
+                    } else {
                         return res.status(500).send({ error: true, estado: false, mensaje: "Error en el sistema al intentar eliminar al cliente, por favor intente mas tarde." });
                     }
-                }else{
+                } else {
                     return res.status(500).send({ error: true, estado: false, mensaje: "Error en el sistema al intentar eliminar al cliente, por favor intente mas tarde." });
                 }
-            }else{
+            } else {
                 return res.status(500).send({ error: true, estado: false, mensaje: "Error en el sistema al intentar eliminar al cliente, por favor intente mas tarde." });
             }
-        }else{
+        } else {
             return res.status(401).send({ error: true, estado: false, mensaje: "No se pudo completar la operación, no existe el cliente o no eres adminisytador." });
         }
     } else {
@@ -116,20 +116,20 @@ rutas.put('/cliente/:correo', async (req, res) => {
                     const estadoCReal = await cConsumo.actualizarIDMedidorCReal(clienteActualizar.id_medidor, req.body['id_medidor']);
                     if (estadoCReal === true || estadoCReal === null) {
                         const estadoHistorial = await cConsumo.actualizarIDMedidorHistorial(clienteActualizar.id_medidor, req.body['id_medidor']);
-                        if(estadoHistorial === true || estadoHistorial === null){
-                            return res.status(200).send({error: false, estado: true, mensaje: "ID de medidor actualizado con exito!"});
-                        }else{
-                            return res.status(401).send({ error: true, estado: false, mensaje: "Error al actualizar en ConsumoReal e Historial"});
+                        if (estadoHistorial === true || estadoHistorial === null) {
+                            return res.status(200).send({ error: false, estado: true, mensaje: "ID de medidor actualizado con exito!" });
+                        } else {
+                            return res.status(401).send({ error: true, estado: false, mensaje: "Error al actualizar en ConsumoReal e Historial" });
                         }
-                    }else{
-                        return res.status(401).send({ error: true, estado: false, mensaje: "Error al actualizar en ConsumoReal e Historial"});
+                    } else {
+                        return res.status(401).send({ error: true, estado: false, mensaje: "Error al actualizar en ConsumoReal e Historial" });
                     }
-                }else{
-                    return res.status(401).send({ error: true, estado: false, mensaje: "Error al actualizar en cliente"});
+                } else {
+                    return res.status(401).send({ error: true, estado: false, mensaje: "Error al actualizar en cliente" });
                 }
             }
 
-        }else{
+        } else {
             cCliente.actualizarCliente(req.params.correo, req.body, res, req.user);
         }
     } else {
@@ -247,7 +247,7 @@ rutas.post('/consumo', async (req, res) => {
         //Se consulta el costo unitario
         const sistema = await cAdministrador.obtenerDatosSistema();
         let costoU = 0;
-        if(sistema){
+        if (sistema) {
             costoU = sistema.costoUnitario;
         }
         const limite = await cConsumo.buscarAlertaCorreo(cliente.correo);
@@ -273,7 +273,12 @@ rutas.get('/consumo/:correo', async (req, res) => {
             const ConsumoReal = await cConsumo.consumoReal(req.user.id_medidor);
             if (ConsumoReal) {
                 console.log("tiene un consumo real");
-                res.status(200).send({ error: false, estado: true, mensaje: "Hay consumo!", consumoMes: ConsumoReal });
+                const sistema = await cAdministrador.obtenerDatosSistema();
+                let costoU = 0;
+                if (sistema) {
+                    costoU = sistema.costoUnitario;
+                }
+                res.status(200).send({ error: false, estado: true, mensaje: "Hay consumo!", consumoMes: ConsumoReal, costoU });
             } else {
                 console.log("NO tiene un consumo real");
                 res.status(200).send({ error: false, estado: false, mensaje: "Aun no existen datos de consumo. Verifica el funcionamineto del medidor." });
