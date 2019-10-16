@@ -6,22 +6,22 @@ const ControladorConsumo = {};
 
 ControladorConsumo.eliminarClienteAlerta = async (correo) => {
     let estado = null;
-    await Alerta.findOneAndDelete({correoCliente: correo}, (error, doc)=>{
-        if(error){
-            estado=false;
-        }else if(doc){
-            estado=true;
+    await Alerta.findOneAndDelete({ correoCliente: correo }, (error, doc) => {
+        if (error) {
+            estado = false;
+        } else if (doc) {
+            estado = true;
         }
     });
     return estado;
 }
 
 ControladorConsumo.reestablecerAlertas = async (correo) => {
-    let estado= null;
-    await Alerta.findOneAndUpdate({correoCliente: correo}, {alerta_1:false, alerta_2: false, alerta_3:false, alerta_4:false, alerta_5: false}, (error, doc)=>{
-        if(error){
+    let estado = null;
+    await Alerta.findOneAndUpdate({ correoCliente: correo }, { alerta_1: false, alerta_2: false, alerta_3: false, alerta_4: false, alerta_5: false }, (error, doc) => {
+        if (error) {
             estado = false;
-        }else if(doc){
+        } else if (doc) {
             estado = true;
         }
     });
@@ -30,11 +30,11 @@ ControladorConsumo.reestablecerAlertas = async (correo) => {
 
 ControladorConsumo.eliminarClienteConsumoReal = async (id_medidor) => {
     let estado = null;
-    await ConsumoReal.findOneAndDelete({id_medidor: id_medidor}, (error, doc)=>{
-        if(error){
-            estado=false;
-        }else if(doc){
-            estado=true;
+    await ConsumoReal.findOneAndDelete({ id_medidor: id_medidor }, (error, doc) => {
+        if (error) {
+            estado = false;
+        } else if (doc) {
+            estado = true;
         }
     });
     return estado;
@@ -42,11 +42,11 @@ ControladorConsumo.eliminarClienteConsumoReal = async (id_medidor) => {
 
 ControladorConsumo.eliminarClienteHistorial = async (id_medidor) => {
     let estado = null;
-    await Historial.deleteMany({id_medidor: id_medidor}, (error, doc)=>{
-        if(error){
-            estado=false;
-        }else if(doc){
-            estado=true;
+    await Historial.deleteMany({ id_medidor: id_medidor }, (error, doc) => {
+        if (error) {
+            estado = false;
+        } else if (doc) {
+            estado = true;
         }
     });
     return estado;
@@ -54,11 +54,11 @@ ControladorConsumo.eliminarClienteHistorial = async (id_medidor) => {
 
 ControladorConsumo.actualizarIDMedidorCReal = async (id_medidor, nuevoId) => {
     let estado = null;
-    ConsumoReal.updateMany({id_medidor: id_medidor}, {id_medidor: nuevoId}, (error, doc)=>{
-        if(error){
+    ConsumoReal.updateMany({ id_medidor: id_medidor }, { id_medidor: nuevoId }, (error, doc) => {
+        if (error) {
             estado = false;
-        }else if(doc){
-            estado=true;
+        } else if (doc) {
+            estado = true;
         }
     })
     return estado;
@@ -66,11 +66,11 @@ ControladorConsumo.actualizarIDMedidorCReal = async (id_medidor, nuevoId) => {
 
 ControladorConsumo.actualizarIDMedidorHistorial = async (id_medidor, nuevoId) => {
     let estado = null;
-    Historial.updateMany({id_medidor: id_medidor}, {id_medidor: nuevoId}, (error, doc)=>{
-        if(error){
+    Historial.updateMany({ id_medidor: id_medidor }, { id_medidor: nuevoId }, (error, doc) => {
+        if (error) {
             estado = false;
-        }else if(doc){
-            estado=true;
+        } else if (doc) {
+            estado = true;
         }
     })
     return estado;
@@ -150,7 +150,7 @@ ControladorConsumo.enviarConsumoReal = function (cliente, res, ultimoConsumo, re
 
                 const io = req.app.get('socketio');
 
-                io.to(cli['idSocketCliente']).emit('consumoReal', {ultimoConsumo, costoU});
+                io.to(cli['idSocketCliente']).emit('consumoReal', { ultimoConsumo, costoU });
 
                 //Ahora se verifica si el cliente definio algun tipo de limite
                 if (limite) {
@@ -392,13 +392,18 @@ ControladorConsumo.registrarConsumoReal = async function (body, res, req, costoU
                 if (error) {
                     cont = cont + 1;
                     return res.send('Error al intentar actualizar. No se guardo ni en historial ni fue enviado al cliente.');
+                } else if (consumoR) {
+                    //Registramos el consumoReal en el historial.
+                    this.registrarConsumoHistorial(consumoReal, costoU, res, req, cliente, limite);
+                } else {
+                    return res.send('Error al intentar actualizar el consumo real. No se encuantra el consumo real del medidor: ' + consumoReal.id_medidor + '.No se guardo ni en historial ni fue enviado al cliente.');
                 }
             });
 
-            if (cont === 0) {
-                //Registramos el consumoReal en el historial.
-                this.registrarConsumoHistorial(consumoReal, costoU, res, req, cliente, limite);
-            }
+            // if (cont === 0) {
+            //     //Registramos el consumoReal en el historial.
+            //     this.registrarConsumoHistorial(consumoReal, costoU, res, req, cliente, limite);
+            // }
 
         }
 
