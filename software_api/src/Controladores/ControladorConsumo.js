@@ -447,6 +447,8 @@ ControladorConsumo.registrarConsumoHistorial = async function (ConsumoReal, cost
                 } else {
                     if (historial) {
                         this.enviarConsumoReal(cliente, res, ConsumoReal.consumoMes, req, costoUnitarioKwh, limite);
+                    }else{
+                        return res.send("No se pudo guardar el nuevo historial.");
                     }
                 }
             });
