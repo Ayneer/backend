@@ -239,23 +239,33 @@ rutas.put('/alerta/:correo', async (req, res) => {
 
 /* Metodo que usa el medidor inteligente para enviar el consumo registrado */
 rutas.post('/consumo', async (req, res) => {
-    //se usan los dos controladores, el de consumoReal e Historial.
-    //Buscar cliente con el id_medidor que llega.
+    console.log("-----------------------Ruta /consumo----------------------");
+    //Se verifica la existencia del cliente por medio del id_medidor que envia el medidor inteligente.
+    console.log("verificando la existencia del cliente con id_medidor => "+req.body['id_medidor']);
     const cliente = await cCliente.buscarClienteMedidor(req.body['id_medidor']);
 
-    if (cliente) {//si existe el cliente si registra el consumo.
-        //Se consulta el costo unitario
+    if (cliente) {//si existe el cliente, se procede a consultar el costo unitario del kw actual y si dispone de algun limite de consumo.
+        console.log("Si existe el cliente.");
+        //Se consulta el costo unitario del kw
+        console.log("Consultando el costo unitario del kw...");
         const sistema = await cAdministrador.obtenerDatosSistema();
         let costoU = 0;
-        if (sistema) {
+        if (sistema) {//Sí no existen datos de configuración del sistema entonces se tomará el costo unitario del kw en cero.
             costoU = sistema.costoUnitario;
         }
+        console.log("Este es el costo unitario del kw => "+costoU);
+        //Se verifica si el usuario dispone de alguna configuración sobre el limite, esto con el fin de validar su estado para emitir o no una alerta.
+        console.log("Verificando existencia de algun limite...");
         const limite = await cConsumo.buscarAlertaCorreo(cliente.correo);
+        console.log("Este es el limite establecido => "+limite);
+        //Se procede a validar el registro del consumo que llega desde el medidor con la ayuda del controlador de consumo.
+        console.log("Enviando los datos con el controlador de consumo...");
         cConsumo.registrarConsumoReal(req.body, res, req, costoU, cliente, limite);
-    } else {
-        //Si no existe el cliente, no se registra el consumo.
+    } else {//Si no existe el cliente, no se registra el consumo y se responde al medidor.
+        console.log("No existe el cliente con id_medidor => "+req.body['id_medidor'])
         res.send({ error: true, estado: false, mensaje: "No existe el cliente para este id de medidor." });
     }
+    console.log("-------------------FIN Ruta /consumo--------------------------");
 });
 
 //Petición realizada por el cliente para conocer su consumo real.
