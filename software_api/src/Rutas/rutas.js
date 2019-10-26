@@ -231,7 +231,7 @@ rutas.put('/sistema', async (req, res) => {
 
 });
 
-rutas.get('sistema', async (req, res) => {
+rutas.get('/sistema', async (req, res) => {
     if (cAutenticacion.estoyAutenticado(req) && await cAdministrador.buscarAdministradorCorreo(req.user.correo)) {//si esta auntenticado un administrador
         const sistema = await cAdministrador.obtenerDatosSistema();
         res.status(400).send({ error: false, estado: true, mensaje: "Configuracion del sistema obtenida con exito", sistema: sistema });
