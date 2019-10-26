@@ -99,27 +99,6 @@ io.on('connection', function (clienteSocket) {
         console.log("clientes activos: ");
         console.log(app.get('clientesActivos'));
     });
-//borrar
-    clienteSocket.on('actualizarSocket', (mi_correo) => {
-        console.log("Actualizando socket..");
-        for (var i = 0; i < app.get('clientesActivos').length; i++) {
-
-            if (app.get('clientesActivos')[i].correo_cliente === mi_correo) {
-
-                app.get('clientesActivos').splice(i, 1);
-
-                break;
-            }
-
-        }
-        
-        app.get('clientesActivos').push({ correo_cliente: mi_correo, idSocketCliente: clienteSocket.id });
-        app.set('clientesActivos', app.get('clientesActivos'));
-        clienteSocket.emit('Actualizado', true);
-
-        console.log("clientes activos: ");
-        console.log(app.get('clientesActivos'));
-    });
 
 });
 

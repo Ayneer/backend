@@ -75,6 +75,12 @@ rutas.delete('/cliente/:correo', async (req, res) => {
                     if (operacionConsumoReal === true || operacionConsumoReal === null) {
                         const operacionHistorial = await cConsumo.eliminarClienteHistorial(cliente.id_medidor);
                         if (operacionHistorial === true || operacionHistorial === null) {
+                            for (var i = 0; i < req.app.get('clientesActivos').length; i++) {
+                                if (req.app.get('clientesActivos')[i].correo_cliente === req.params.correo) {
+                                    req.app.get('clientesActivos').splice(i, 1);
+                                    break;
+                                }
+                            }
                             return res.status(200).send({ error: false, estado: true, mensaje: "Cliente eliminado con exito!" });
                         } else {
                             return res.status(500).send({ error: true, estado: false, mensaje: "Error en el sistema al intentar eliminar al cliente, por favor intente mas tarde." });
