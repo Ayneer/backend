@@ -190,6 +190,7 @@ rutas.put('/administrador/:correo', (req, res) => {
     cAdministrador.actualizarAdministrador(req.params.correo, req.body, res);
 });
 
+// CRUD DEL SISTEMA
 rutas.put('/sistema', async (req, res) => {
     if (cAutenticacion.estoyAutenticado(req)) {
         const administrador = await cAdministrador.buscarAdministradorCorreo(req.user.correo);
@@ -202,6 +203,15 @@ rutas.put('/sistema', async (req, res) => {
         res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
     }
 
+});
+
+rutas.get('sistema', async (req, res) => {
+    if (cAutenticacion.estoyAutenticado(req) && await cAdministrador.buscarAdministradorCorreo(req.user.correo)) {//si esta auntenticado un administrador
+        const sistema = await cAdministrador.obtenerDatosSistema();
+        res.status(400).send({ error: false, estado: true, mensaje: "Configuracion del sistema obtenida con exito", sistema });
+    }else{
+        res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
+    }
 });
 
 /* CRUD ALERTA */
@@ -330,42 +340,5 @@ rutas.get('/historial/:correo', async (req, res) => {
     }
 });
 
-rutas.get('/ex', (req, res) => {
-    const f = new Date();
-    console.log("fecha rara: ", f);
-    console.log("mes de fecha rara: ", f.getMonth());
-    const h = f.toLocaleString('en-us', { hour12: true });
-    console.log("Convercion a hora local: ", h);
-    // const f2 = new Date(h);// 8/28/2019, 13:10:40 PM
-    // var hora = f2.getHours();
-    // if(hora>12){
-    //     hora = hora - 12;
-    // }else{
-    //     if(hora === 0){
-    //         hora = 12;
-    //     }
-    // }
-    // console.log(hora);
-    // console.log("Convercion a hora rara: ", f2);
-    // const f3 = f2.toLocaleString('en-us', { hour12: true });
-    // console.log('De nuevo la convierto a la local', f3);
-
-    // const cadena = "8/28/2019, 12:33:24 PM";
-    // const arregloFecha = cadena.split(",");
-    // console.log(arregloFecha[0]);
-    // const arregloHora = arregloFecha[1].split(" ");
-    // console.log(arregloHora[2]);
-
-    let mesHayer = new Date("8/25/2019, 8:50:25 PM").getMonth();
-    console.log("mes del historial: ", mesHayer + 1);
-
-    const fechaMedidor = new Date("9/1/2019, 6:55:25 AM");
-    const fechaServidor = new Date();
-    console.log(fechaMedidor);
-    let fe = new Date().toLocaleString('en-us', { hour12: true });
-    console.log(new Date(fe));
-
-    res.send("listo");
-});
 
 module.exports = rutas;
