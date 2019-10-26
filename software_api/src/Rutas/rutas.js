@@ -200,7 +200,7 @@ rutas.post('/administrador/:correo', (req, res) => {
     if (cAutenticacion.estoyAutenticado(req) && await cAdministrador.buscarAdministradorCorreo(req.user.correo)) {//si esta auntenticado un administrador
         let contador = 0;
         for (var i = 0; i < req.app.get('clientesActivos').length; i++) {
-            if (req.app.get('clientesActivos')[i].correo_cliente === req.params.correo) {
+            if (req.app.get('clientesActivos')[i].correo_cliente === req.body['correo']) {
                 req.app.get('clientesActivos').splice(i, 1);
                 contador++;
                 break;
