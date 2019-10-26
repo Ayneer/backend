@@ -133,16 +133,8 @@ ControladorCliente.actualizarCliente = async (correoR, req, res, usuario) => {
 
                 const cli = await Cliente.findOne({ correo: req['correo'] });
 
-                // if(req['correo'] !== correoR){//estoy intentado actualizar el correo
-                //     if(cli){//Si existe el correo quiere decir que ya esta en uso
-                //         return res.status(401).send({ error: false, estado: false, mensaje: "El correo ya esta en uso!" });
-                //     }else{//No existe el correo, se pude actualizar
-                //         actualizacion.correo = req['correo'];
-                //     }
-                // }
-
                 if (cli) {
-                    if (cli.correo !== correoR) {//Estoy intentando actualizar el correo pero ya esta en uso
+                    if (cli.correo !== correoR) {//No estoy actualizando el correo
                         return res.status(401).send({ error: false, estado: false, mensaje: "El correo ya esta en uso!" });
                     } else {
                         actualizacion.telefono = req['telefono'];
