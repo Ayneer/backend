@@ -196,6 +196,19 @@ rutas.put('/administrador/:correo', (req, res) => {
     cAdministrador.actualizarAdministrador(req.params.correo, req.body, res);
 });
 
+rutas.post('/administrador/:correo', (req, res) => {
+    if (cAutenticacion.estoyAutenticado(req) && await cAdministrador.buscarAdministradorCorreo(req.user.correo)) {//si esta auntenticado un administrador
+        for (var i = 0; i < req.app.get('clientesActivos').length; i++) {
+            if (req.app.get('clientesActivos')[i].correo_cliente === req.params.correo) {
+                req.app.get('clientesActivos').splice(i, 1);
+                break;
+            }
+        }
+    }else{
+        res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
+    }
+});
+
 // CRUD DEL SISTEMA
 rutas.put('/sistema', async (req, res) => {
     if (cAutenticacion.estoyAutenticado(req)) {
