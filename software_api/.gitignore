@@ -46,6 +46,8 @@ build/Release
 node_modules/
 jspm_packages/
 ../.vscode/
+../Medidor/
+../software_app/
 
 # TypeScript v1 declaration files
 typings/

@@ -196,7 +196,7 @@ rutas.put('/administrador/:correo', (req, res) => {
     cAdministrador.actualizarAdministrador(req.params.correo, req.body, res);
 });
 
-rutas.post('/administrador/:correo', (req, res) => {
+rutas.post('/administrador/:correo', async (req, res) => {
     if (cAutenticacion.estoyAutenticado(req) && await cAdministrador.buscarAdministradorCorreo(req.user.correo)) {//si esta auntenticado un administrador
         let contador = 0;
         for (var i = 0; i < req.app.get('clientesActivos').length; i++) {
