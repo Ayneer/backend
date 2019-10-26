@@ -39,7 +39,19 @@ rutas.get('/estoyAutenticado', (req, res) => {
         if (req.user.correo === "admin@energia.com") {
             var admin = true;
         }
-        res.status(200).send({ error: false, estado: true, mensaje: "Sesion activa correctamente.", usuario: req.user, admin });
+        let contador = 0;
+        for (var i = 0; i < req.app.get('clientesActivos').length; i++) {
+            if (req.app.get('clientesActivos')[i].correo_cliente === req.user.correo) {
+                contador++;
+                break;
+            }
+        }
+        if(contador === 0){//sesion activa pero no esta en la lista de activos... se debe cerrar la sesion
+            req.logOut();
+            res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
+        }else{
+            res.status(200).send({ error: false, estado: true, mensaje: "Sesion activa correctamente.", usuario: req.user, admin });
+        }
     }
 });
 
@@ -207,9 +219,9 @@ rutas.post('/administrador/:correo', async (req, res) => {
             }
         }
         if(contador === 0){
-            res.status(400).send({ error: false, estado: false, mensaje: "El usuario no tiene la sesion activa" });
+            res.status(402).send({ error: false, estado: false, mensaje: "El usuario no tiene la sesion activa" });
         }else{
-            res.status(400).send({ error: false, estado: true, mensaje: "Sesion cerrada con exito." });
+            res.status(402).send({ error: false, estado: true, mensaje: "Sesion cerrada con exito." });
         }
     }else{
         res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
