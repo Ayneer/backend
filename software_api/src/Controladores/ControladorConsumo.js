@@ -172,7 +172,8 @@ ControladorConsumo.enviarConsumoReal = (cliente, res, ultimoConsumo, req, costoU
                     let notificacion = {
                         limte: 0,
                         consumo: 0,
-                        costo: 0
+                        costo: 0,
+                        mensaje: ""
                     }
                     notificacion.mensaje = "Alerta: Has superado el 50% de tu limite";
                     io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
