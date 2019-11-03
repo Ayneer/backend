@@ -27,6 +27,7 @@ ControladorAdministrador.nuevoAdministrador = async (req, res) => {
         });
     } else {
         //Ya existe el administrador
+        console.log(administrador);
         return res.status(401).send({ error: false, estado: false, mensaje: "El correo ya esta en uso." });
     }
 }
