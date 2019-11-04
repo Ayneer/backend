@@ -116,19 +116,18 @@ ControladorConsumo.actualizarLimite = async (correo, body, res) => {
     let actualizacion = {};
     actualizacion.limite = body['limite'];
     actualizacion.tipoLimite = body['tipoLimite'];
+    actualizacion.alerta_1 = false;
+    actualizacion.alerta_2 = false;
+    actualizacion.alerta_3 = false;
+    actualizacion.alerta_4 = false;
+    actualizacion.alerta_5 = false;
 
     await Alerta.findOneAndUpdate({ correoCliente: correo }, actualizacion, (error, alerta) => {
         if (error) {
             return res.status(500).send({ error: true, estado: false, mensaje: "Error #5 en el sistema, intente mas tarde." });
         } else {
             if (alerta) {
-
-                if(await this.reestablecerAlertas(correo)){
-                    return res.status(200).send({ error: false, estado: true, mensaje: "Alerta actualizada!" });
-                }else{
-                    return res.status(200).send({ error: false, estado: false, mensaje: "Fallo al actualizar la alerta" });
-                }
-                
+                return res.status(200).send({ error: false, estado: true, mensaje: "Alerta actualizada!" });
             } else {
                 return res.status(400).send({ error: false, estado: false, mensaje: "No existe la alerta" });
             }
@@ -242,7 +241,7 @@ ControladorConsumo.enviarConsumoReal = (cliente, res, ultimoConsumo, req, costoU
                                 //Marcar como alerta enviada
                                 contadorAlertaEnviada++;
                                 actualizacion = { alerta_1: true }
-                            }else if ((ultimoConsumo * costoU) >= (0.6 * (limite.limite)) && (ultimoConsumo * costoU) < (0.7 * (limite.limite)) && !limite.alerta_2) {//validando el 60%
+                            } else if ((ultimoConsumo * costoU) >= (0.6 * (limite.limite)) && (ultimoConsumo * costoU) < (0.7 * (limite.limite)) && !limite.alerta_2) {//validando el 60%
                                 console.log("lo supero el 60%")
                                 notificacion.mensaje = "Alerta: Has superado el 60% de tu limite";
                                 io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
