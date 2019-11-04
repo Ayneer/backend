@@ -111,18 +111,24 @@ ControladorConsumo.crearAlerta = async (body, res) => {
 }
 
 
-ControladorConsumo.actualizarLimite = (correo, body, res) => {
+ControladorConsumo.actualizarLimite = async (correo, body, res) => {
 
     let actualizacion = {};
     actualizacion.limite = body['limite'];
     actualizacion.tipoLimite = body['tipoLimite'];
 
-    Alerta.findOneAndUpdate({ correoCliente: correo }, actualizacion, (error, alerta) => {
+    await Alerta.findOneAndUpdate({ correoCliente: correo }, actualizacion, (error, alerta) => {
         if (error) {
             return res.status(500).send({ error: true, estado: false, mensaje: "Error #5 en el sistema, intente mas tarde." });
         } else {
             if (alerta) {
-                return res.status(200).send({ error: false, estado: true, mensaje: "Alerta actualizada!" });
+
+                if(await this.reestablecerAlertas(correo)){
+                    return res.status(200).send({ error: false, estado: true, mensaje: "Alerta actualizada!" });
+                }else{
+                    return res.status(200).send({ error: false, estado: false, mensaje: "Fallo al actualizar la alerta" });
+                }
+                
             } else {
                 return res.status(400).send({ error: false, estado: false, mensaje: "No existe la alerta" });
             }
@@ -175,8 +181,6 @@ ControladorConsumo.enviarConsumoReal = (cliente, res, ultimoConsumo, req, costoU
                         costo: 0,
                         mensaje: ""
                     }
-                    notificacion.mensaje = "Alerta: Has superado el 50% de tu limite";
-                    io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
                     console.log("Verificando que el cliente este excediendo el 50, 80 y 100% del limite propuesto...")
                     //Se alerta en caso de sobrepasar/igualar el 50, 80 y 100 % del limite.
                     if (limite.limite > 0) {
@@ -268,131 +272,6 @@ ControladorConsumo.enviarConsumoReal = (cliente, res, ultimoConsumo, req, costoU
                                 actualizacion = { alerta_5: true }
                             }
                         }
-
-
-
-/*
-
-                        if (!limite.alerta_1) {//Alerta sobre el 50%
-                            console.log("verificando que el limite este superando el 50% -> UC " + ultimoConsumo);
-                            console.log("verificando que el limite este superando el 50% -> TL " + limite.tipoLimite);
-                            notificacion.mensaje = "Alerta: Has superado el 50% de tu limite";
-                            if (limite.tipoLimite === 0) {//Limite por kwh
-                                console.log("verificando que el limite este superando el 50% -> OP " + ultimoConsumo + " >= " + (0.5 * (limite.limite)) + " && " + ultimoConsumo + " < " + (0.6 * (limite.limite)));
-                                if (ultimoConsumo >= (0.5 * (limite.limite)) && ultimoConsumo < (0.6 * (limite.limite))) {
-                                    console.log("lo supero el 50%")
-                                    io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
-                                    //Marcar como alerta enviada
-                                    contadorAlertaEnviada++;
-                                    actualizacion = { alerta_1: true }
-                                }
-                            } else {//Limite por costo
-                                if ((ultimoConsumo * costoU) >= (0.5 * (limite.limite))) {
-                                    io.to(cli['idSocketCliente']).emit('limiteCosto', notificacion);
-                                    //Marcar como alerta enviada
-                                    contadorAlertaEnviada++;
-                                    actualizacion = { alerta_1: true }
-                                }
-                            }
-                        } else {
-                            console.log("Alerta 2 -> " + limite.alerta_2);
-                            if (!limite.alerta_2) {//Alerta sobre el 60%
-                                console.log("verificando que el limite este superando el 60% -> UC " + ultimoConsumo);
-                                console.log("verificando que el limite este superando el 60% -> TL " + limite.tipoLimite);
-                                notificacion.mensaje = "Alerta: Has superado el 60% de tu limite";
-                                if (limite.tipoLimite === 0) {//Limite por kwh
-                                    console.log("verificando que el limite este superando el 60% -> OP " + ultimoConsumo + " >= " + (0.6 * (limite.limite)) + " && " + ultimoConsumo + " < " + (0.7 * (limite.limite)));
-                                    if (ultimoConsumo >= (0.6 * (limite.limite)) && ultimoConsumo < (0.7 * (limite.limite))) {
-                                        console.log("lo supero el 60%")
-                                        io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
-                                        //Marcar como alerta enviada
-                                        contadorAlertaEnviada++;
-                                        actualizacion = { alerta_2: true }
-                                    }
-                                } else {//Limite por costo
-                                    if ((ultimoConsumo * costoU) >= (0.6 * (limite.limite))) {
-                                        io.to(cli['idSocketCliente']).emit('limiteCosto', notificacion);
-                                        //Marcar como alerta enviada
-                                        contadorAlertaEnviada++;
-                                        actualizacion = { alerta_2: true }
-                                    }
-                                }
-                            } else {
-                                console.log("Alerta 3 -> " + limite.alerta_3);
-                                if (!limite.alerta_3) {//Alerta sobre el 70%
-                                    notificacion.mensaje = "Alerta: Has superado el 70% de tu limite";
-                                    console.log("verificando que el limite este superando el 70% -> UC " + ultimoConsumo);
-                                    console.log("verificando que el limite este superando el 70% -> TL " + limite.tipoLimite);
-                                    if (limite.tipoLimite === 0) {//Limite por kwh
-
-                                        console.log("verificando que el limite este superando el 70% -> OP " + ultimoConsumo + " >= " + (0.7 * (limite.limite)) + " && " + ultimoConsumo + " < " + (0.8 * (limite.limite)));
-                                        if (ultimoConsumo >= (0.7 * (limite.limite)) && ultimoConsumo < (0.8 * (limite.limite))) {
-                                            console.log("lo supero el 70%")
-                                            io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
-                                            //Marcar como alerta enviada
-                                            contadorAlertaEnviada++;
-                                            actualizacion = { alerta_3: true }
-                                        }
-                                    } else {//Limite por costo
-                                        if ((ultimoConsumo * costoU) >= (0.7 * (limite.limite))) {
-                                            io.to(cli['idSocketCliente']).emit('limiteCosto', notificacion);
-                                            //Marcar como alerta enviada
-                                            contadorAlertaEnviada++;
-                                            actualizacion = { alerta_3: true }
-                                        }
-                                    }
-                                } else {
-                                    console.log("Alerta 4 -> " + limite.alerta_4);
-                                    if (!limite.alerta_4) {//Alerta sobre el 80%
-                                        notificacion.mensaje = "Alerta: Has superado el 80% de tu limite";
-                                        console.log("verificando que el limite este superando el 80% -> UC " + ultimoConsumo);
-                                        console.log("verificando que el limite este superando el 80% -> TL " + limite.tipoLimite);
-                                        if (limite.tipoLimite === 0) {//Limite por kwh
-                                            console.log("verificando que el limite este superando el 80% -> OP " + ultimoConsumo + " >= " + (0.8 * (limite.limite)) + " && " + ultimoConsumo + " < " + (0.9 * (limite.limite)));
-                                            if (ultimoConsumo >= (0.8 * (limite.limite)) && ultimoConsumo < (0.9 * (limite.limite))) {
-                                                console.log("lo supero el 80%")
-                                                io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
-                                                //Marcar como alerta enviada
-                                                contadorAlertaEnviada++;
-                                                actualizacion = { alerta_4: true }
-                                            }
-                                        } else {//Limite por costo
-                                            if ((ultimoConsumo * costoU) >= (0.8 * (limite.limite))) {
-                                                io.to(cli['idSocketCliente']).emit('limiteCosto', notificacion);
-                                                //Marcar como alerta enviada
-                                                contadorAlertaEnviada++;
-                                                actualizacion = { alerta_4: true }
-                                            }
-                                        }
-                                    } else {
-                                        console.log("Alerta 5 -> " + limite.alerta_5);
-                                        if (!limite.alerta_5) {//Alerta sobre el > 90%
-                                            notificacion.mensaje = "Alerta: Has superado mas del 90% de tu limite";
-                                            console.log("verificando que el limite este superando el 90% -> UC " + ultimoConsumo);
-                                            console.log("verificando que el limite este superando el 90% -> TL " + limite.tipoLimite);
-                                            if (limite.tipoLimite === 0) {//Limite por kwh
-                                                console.log("verificando que el limite este superando el 89% -> OP " + ultimoConsumo + " >= " + (0.9 * (limite.limite)));
-                                                if (ultimoConsumo >= (0.9 * (limite.limite))) {
-                                                    console.log("lo supero el 90%")
-                                                    io.to(cli['idSocketCliente']).emit('limiteKwh', notificacion);
-                                                    //Marcar como alerta enviada
-                                                    contadorAlertaEnviada++;
-                                                    actualizacion = { alerta_5: true }
-                                                }
-                                            } else {//Limite por costo
-                                                if ((ultimoConsumo * costoU) >= (0.9 * (limite.limite))) {
-                                                    io.to(cli['idSocketCliente']).emit('limiteCosto', notificacion);
-                                                    //Marcar como alerta enviada
-                                                    contadorAlertaEnviada++;
-                                                    actualizacion = { alerta_5: true }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-*/
 
                         if (contadorAlertaEnviada > 0) {//Se le envió una alerta por socket ahora se debe actualizar el documento Alerta para indicar que alerta fue enviada y no saturar al cliente con mas alerta de lo mismo.
                             console.log("Se ha enviado una aleta al cliente. Ahora se intentará actualizar el documento Alerta del cliente...");

@@ -264,7 +264,7 @@ rutas.get('/alerta/:correo', async (req, res) => {
 
 rutas.put('/alerta/:correo', async (req, res) => {
     if (cAutenticacion.estoyAutenticado(req)) {
-        cConsumo.actualizarLimite(req.params.correo, req.body, res);
+        await cConsumo.actualizarLimite(req.params.correo, req.body, res);
     } else {
         res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
     }
