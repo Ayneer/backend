@@ -7,8 +7,9 @@ const io = require('socket.io')(http);
 const rutas = require('./src/Rutas/rutas');
 const passport = require('passport');
 const session = require('express-session');
-const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const mongoose = require('mongoose');
+const MongoStore = require('connect-mongo')(session);
 
 //Controlador
 const cCliente = require('./src/Controladores/ControladorCliente');
@@ -32,17 +33,20 @@ app.use(cors({
     'allowedHeaders': ['sessionId', 'Content-Type'],
     'exposedHeaders': ['sessionId'],
     'credentials': true,
-    'origin': ['http://localhost:3000','http://localhost:3001', 'http://192.168.1.69:3000', 'http://192.168.1.61:3000','http://192.168.1.69:3001', 'http://semard.com.co:3000', 'http://167.86.117.236/3000']
+    'origin': ['http://localhost:3000', 'http://localhost:3001', 'http://192.168.1.69:3000', 'http://192.168.1.61:3000', 'http://192.168.1.69:3001', 'http://semard.com.co:3000', 'http://167.86.117.236/3000']
 }));
 //app.use(cookieParser('secretoLlave'));
 app.use(session({
     secret: 'secretoLlave',
     resave: false,
     saveUninitialized: false,
-    /*cookie:{
+
+    cookie: {
         httpOnly: false,
-        maxAge: null
-    }*/
+        maxAge: 1000 * 60 * 60 * 24 * 365
+    },
+    store: new MongoStore({ mongooseConnection: mongoose.connection })
+
 }));
 app.use(passport.initialize());
 app.use(passport.session());
