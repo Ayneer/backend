@@ -33,7 +33,7 @@ app.use(cors({
     'allowedHeaders': ['sessionId', 'Content-Type'],
     'exposedHeaders': ['sessionId'],
     'credentials': true,
-    'origin': ['http://localhost:3000', 'http://localhost:3001', 'http://192.168.1.69:3000', 'http://192.168.1.61:3000', 'http://192.168.1.69:3001', 'http://semard.com.co:3000', 'http://167.86.117.236/3000']
+    'origin': '*'
 }));
 //app.use(cookieParser('secretoLlave'));
 app.use(session({
