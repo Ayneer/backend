@@ -384,7 +384,7 @@ ControladorConsumo.registrarConsumoReal = async function (body, res, req, costoU
 
             console.log("resta de meses (Mes de medidor - Mes de ConsumoReal): ", (fechaMedidor.getMonth() + 1), " - ", (fechaConsumoGuardado.getMonth() + 1));
 
-            if (resta > 0) {//Inicio de un nuevo mes
+            if (resta != 0) {//Inicio de un nuevo mes
 
                 console.log("Estamos en un nuevo mes, se reestableceran las alertas y se almacena el consumo del mes menor.");
                 //Estamos en un nuevo mes, se reestableceran las alertas y se almacena el consumo del mes menor.
