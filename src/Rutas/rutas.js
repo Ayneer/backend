@@ -237,7 +237,7 @@ rutas.post('/sistema/fechaPeriodo', async (req, res) => {
         if (administrador) {//Si es un administrador, entonces puede actualizar el sistema.
             const respuesta = await cAdministrador.actualizarFechaPeriodo(req.body['fechaIni'], req.body['fechaFin']);
             if(respuesta === true){
-                res.status(200).send({ error: false, estado: true, mensaje: "Fecha del periodo guardad/actualizada con éxito!" });
+                res.status(200).send({ error: false, estado: true, mensaje: "Fecha del periodo guardada/actualizada con éxito!" });
             }else{
                 return res.status(200).send({ error: true, estado: false, mensaje: "Error al intentar guardar/actualizar la fehca del periodo" });
             }
