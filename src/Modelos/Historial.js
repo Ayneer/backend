@@ -9,7 +9,9 @@ const esquema_Historial = new mongoose.Schema({
     consumoDiasAnteriores: { type: Number, required: true },//total de consumo de dias anteriores al del historial (dia) en el mes en curso.
     costoUnitarioKwh: { type: Number, required: true },
     fecha: { type: String, required: true },
-    id_medidor: { type: Number, required: true }
+    id_medidor: { type: Number, required: true },
+    fechaFinalCorte: { type: String, required: true },
+    fechaIniCorte: { type: String, required: true }
 });
 
 module.exports = mongoose.model('historiales', esquema_Historial);

@@ -207,9 +207,9 @@ rutas.post('/administrador/:correo', async (req, res) => {
             }
         }
         if(contador === 0){
-            res.status(402).send({ error: false, estado: false, mensaje: "El usuario no tiene la sesion activa" });
+            res.status(402).send({ error: false, estado: false, mensaje: "El usuario no tiene la sesion activa", variante: "warning" });
         }else{
-            res.status(402).send({ error: false, estado: true, mensaje: "Sesion cerrada con exito." });
+            res.status(402).send({ error: false, estado: true, mensaje: "Sesion cerrada con exito.", variante: "ssuccess" });
         }
     }else{
         res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
@@ -231,10 +231,49 @@ rutas.put('/sistema', async (req, res) => {
 
 });
 
+rutas.post('/sistema/fechaPeriodo', async (req, res) => {
+    if (cAutenticacion.estoyAutenticado(req)) {
+        const administrador = await cAdministrador.buscarAdministradorCorreo(req.user.correo);
+        if (administrador) {//Si es un administrador, entonces puede actualizar el sistema.
+            const respuesta = await cAdministrador.actualizarFechaPeriodo(req.body['fechaIni'], req.body['fechaFin']);
+            if(respuesta === true){
+                res.status(200).send({ error: false, estado: true, mensaje: "Fecha del periodo guardad/actualizada con éxito!" });
+            }else{
+                return res.status(200).send({ error: true, estado: false, mensaje: "Error al intentar guardar/actualizar la fehca del periodo" });
+            }
+        } else {
+            res.status(403).send({ error: false, estado: false, mensaje: "Accion denegada." });
+        }
+    } else {
+        res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
+    }
+
+});
+
+
+rutas.post('/sistema/fechaProxPeriodo', async (req, res) => {
+    if (cAutenticacion.estoyAutenticado(req)) {
+        const administrador = await cAdministrador.buscarAdministradorCorreo(req.user.correo);
+        if (administrador) {//Si es un administrador, entonces puede actualizar el sistema.
+            const respuesta = await cAdministrador.actualizarProxFechaPeriodo(req.body['fechaIni'], req.body['fechaFin']);
+            if(respuesta === true){
+                res.status(200).send({ error: false, estado: true, mensaje: "Fecha próxima del periodo guardad/actualizada con éxito!" });
+            }else{
+                return res.status(200).send({ error: true, estado: false, mensaje: "Error al intentar guardar/actualizar la fehca próxima del periodo" });
+            }
+        } else {
+            res.status(403).send({ error: false, estado: false, mensaje: "Accion denegada." });
+        }
+    } else {
+        res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
+    }
+
+});
+
 rutas.get('/sistema', async (req, res) => {
     if (cAutenticacion.estoyAutenticado(req) && await cAdministrador.buscarAdministradorCorreo(req.user.correo)) {//si esta auntenticado un administrador
         const sistema = await cAdministrador.obtenerDatosSistema();
-        res.status(400).send({ error: false, estado: true, mensaje: "Configuracion del sistema obtenida con exito", sistema: sistema });
+        res.status(200).send({ error: false, estado: true, mensaje: "Configuracion del sistema obtenida con exito", sistema: sistema });
     }else{
         res.status(401).send({ error: false, estado: false, mensaje: "No estas autenticado, debes iniciar sesion." });
     }
@@ -282,21 +321,33 @@ rutas.post('/consumo', async (req, res) => {
 
     if (cliente) {//si existe el cliente, se procede a consultar el costo unitario del kw actual y si dispone de algun limite de consumo.
         console.log("Si existe el cliente.");
-        //Se consulta el costo unitario del kw
-        console.log("Consultando el costo unitario del kw...");
+        //Se consulta el costo unitario del kw y el día de corte
+        console.log("Consultando el costo unitario del kw y día de corte...");
         const sistema = await cAdministrador.obtenerDatosSistema();
         let costoU = 0;
+        let fechaIniCorte = null;
+        let fechaFinCorte = null;
+        let fechaProxFinalPeriodo = null;
+        let fechaProxInicialPeriodo = null;
         if (sistema) {//Sí no existen datos de configuración del sistema entonces se tomará el costo unitario del kw en cero.
             costoU = sistema.costoUnitario;
+            fechaIniCorte = sistema.fechaInicialPeriodo;
+            fechaFinCorte = sistema.fechaFinalPeriodo;
+            fechaProxFinalPeriodo = sistema.fechaProxFinalPeriodo;
+            fechaProxInicialPeriodo = sistema.fechaProxInicialPeriodo;
         }
         console.log("Este es el costo unitario del kw => "+costoU);
-        //Se verifica si el usuario dispone de alguna configuración sobre el limite, esto con el fin de validar su estado para emitir o no una alerta.
+        //Se verifica si el usuario dispone de alguna configuración sobre el limite, esto con el fin de validar su estado para emitir o no una alerta mas adelante.
         console.log("Verificando existencia de algun limite...");
         const limite = await cConsumo.buscarAlertaCorreo(cliente.correo);
         console.log("Este es el limite establecido => "+limite);
         //Se procede a validar el registro del consumo que llega desde el medidor con la ayuda del controlador de consumo.
         console.log("Enviando los datos con el controlador de consumo...");
-        cConsumo.registrarConsumoReal(req.body, res, req, costoU, cliente, limite);
+        if(!fechaIniCorte || !fechaFinCorte){
+            res.send({ error: true, estado: false, mensaje: "No se puede completar el registro del consumo, debido a que el sistema no tiene definido fechas para el periodo." });
+        }else{
+            await cConsumo.registrarConsumoReal(req.body, res, req, costoU, cliente, limite, fechaIniCorte, fechaFinCorte, fechaProxInicialPeriodo, fechaProxFinalPeriodo);
+        }
     } else {//Si no existe el cliente, no se registra el consumo y se responde al medidor.
         console.log("No existe el cliente con id_medidor => "+req.body['id_medidor'])
         res.send({ error: true, estado: false, mensaje: "No existe el cliente para este id de medidor." });

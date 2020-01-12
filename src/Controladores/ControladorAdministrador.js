@@ -95,8 +95,8 @@ ControladorAdministrador.buscarAdministradorCorreo = function (correoABuscar) {
 }
 
 ControladorAdministrador.definirCostoUnitario = async function (nuevoCosto, res) {
-    const sistema = await Sistema.findOne({});                                    
-    if(sistema){
+    const sistema = await Sistema.findOne({});
+    if (sistema) {
         console.log(sistema);
         await Sistema.updateMany({}, { costoUnitario: nuevoCosto }, (error) => {
             if (error) {
@@ -106,22 +106,81 @@ ControladorAdministrador.definirCostoUnitario = async function (nuevoCosto, res)
                 return res.status(200).send({ error: false, estado: true, mensaje: "Nuevo costo guardado" });
             }
         });
-    }else{
+    } else {
         const nuevoSistema = new Sistema();
         nuevoSistema.costoUnitario = nuevoCosto;
-        nuevoSistema.save((error)=>{
-            if(error){
+        nuevoSistema.fechaProxFinalPeriodo = null;//Por defecto
+        nuevoSistema.fechaProxInicialPeriodo = null;//Por defecto
+        nuevoSistema.fechaInicialPeriodo = null;//Por defecto
+        nuevoSistema.fechaFinalPeriodo = null;//Por defecto
+        nuevoSistema.save((error) => {
+            if (error) {
                 return res.status(500).send({ error: true, estado: false, mensaje: "Error al guardar el costo" });
-            }else{
+            } else {
                 console.log("guardado")
                 return res.status(200).send({ error: false, estado: true, mensaje: "Nuevo costo guardado" });
             }
         })
     }
-    
+
 }
 
-ControladorAdministrador.obtenerDatosSistema = function(){
+ControladorAdministrador.actualizarFechaPeriodo = async (fechaIni, fechaFin) => {
+    const sistema = await Sistema.findOne({});
+    let resultado = false;
+    if (sistema) {
+        console.log(sistema);
+        await Sistema.updateMany({}, { fechaInicialPeriodo: fechaIni, fechaFinalPeriodo: fechaFin, fechaProxFinalPeriodo: null, fechaProxInicialPeriodo: null}, async (error) => {
+            if (error) {
+                console.log("error")
+                resultado = false;
+            } else {
+                console.log("actualizado")
+                resultado = true;
+            }
+        });
+        console.log("fin del caso 1")
+    } else {
+        const nuevoSistema = new Sistema();
+        nuevoSistema.costoUnitario = 300;//Por defecto
+        nuevoSistema.fechaProxFinalPeriodo = null;//Por defecto
+        nuevoSistema.fechaProxInicialPeriodo = null;//Por defecto
+        nuevoSistema.fechaInicialPeriodo = fechaIni;
+        nuevoSistema.fechaFinalPeriodo = fechaFin;
+        nuevoSistema.save(async (error) => {
+            if (error) {
+                console.log("error")
+                resultado = false;
+            } else {
+                console.log("guardado")
+                resultado = true;
+            }
+        });
+    }
+
+    return resultado;
+}
+
+ControladorAdministrador.actualizarProxFechaPeriodo = async (fechaIni, fechaFin) => {
+    const sistema = await Sistema.findOne({});
+    let resultado = false;
+    if (sistema) {
+        console.log(sistema);
+        await Sistema.updateMany({}, { fechaProxInicialPeriodo: fechaIni, fechaProxFinalPeriodo: fechaFin }, async (error) => {
+            if (error) {
+                console.log("error")
+                resultado = false;
+            } else {
+                console.log("actualizado")
+                resultado = true;
+            }
+        });
+        console.log("fin del caso 1")
+    } 
+    return resultado;
+}
+
+ControladorAdministrador.obtenerDatosSistema = function () {
     return Sistema.findOne({});
 }
 module.exports = ControladorAdministrador;

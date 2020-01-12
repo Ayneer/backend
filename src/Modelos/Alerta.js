@@ -8,7 +8,8 @@ const esquema_Alerta = new mongoose.Schema({
     alerta_2: { type: Boolean },
     alerta_3: { type: Boolean },
     alerta_4: { type: Boolean },
-    alerta_5: { type: Boolean }
+    alerta_5: { type: Boolean },
+    historico: {type: Array}
 });
 
 module.exports = mongoose.model('alertas', esquema_Alerta);
