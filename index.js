@@ -33,7 +33,7 @@ app.use(cors({
     'allowedHeaders': ['sessionId', 'Content-Type'],
     'exposedHeaders': ['sessionId'],
     'credentials': true,
-    'origin': ['http://localhost:3000', 'http://192.168.1.61:3000', 'http://semard.com.co:3000', 'http://167.86.117.236/3000', 'http://167.86.117.236']
+    'origin': ['http://localhost:3000', 'http://192.168.1.61:3000', 'http://semard.com.co:3000', 'http://167.86.117.236/3000', 'http://167.86.117.236', 'https://energia-app.web.app', 'https://energia-app.web.app/']
 }));
 //app.use(cookieParser('secretoLlave'));
 app.use(session({
