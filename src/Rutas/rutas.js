@@ -7,6 +7,10 @@ const cAdministrador = require('../Controladores/ControladorAdministrador');
 const cCliente = require('../Controladores/ControladorCliente');
 const cConsumo = require('../Controladores/ControladorConsumo');
 
+rutas.get('/', (req, res)=>{
+    res.send({date: new Date().toLocaleString('en-us', { hour12: true })})
+});
+
 /* SESION */
 rutas.post('/iniciarSesion', async (req, res, next) => {
     console.log(req.body);
