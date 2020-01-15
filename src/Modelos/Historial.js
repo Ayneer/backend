@@ -11,7 +11,8 @@ const esquema_Historial = new mongoose.Schema({
     fecha: { type: String, required: true },
     id_medidor: { type: Number, required: true },
     fechaFinalCorte: { type: String, required: true },
-    fechaIniCorte: { type: String, required: true }
+    fechaIniCorte: { type: String, required: true },
+    subHistorico: {type: Object, required: true}
 });
 
 module.exports = mongoose.model('historiales', esquema_Historial);

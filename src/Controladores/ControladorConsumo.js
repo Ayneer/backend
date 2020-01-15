@@ -3,6 +3,21 @@ const Historial = require('../Modelos/Historial');
 const Alerta = require('../Modelos/Alerta');
 const ControladorAdministrador = require('../Controladores/ControladorAdministrador');
 
+const getHoraFecha = fecha => fecha.split(',')[1];
+const getActualizacionSubHistorico = (ultimoHistorial, consumoReal, consumoRealDia) => {
+
+    let historicoPorHora_copy = ultimoHistorial.subHistorico.historicoPorHora;
+    let totalConsumo_copy = ultimoHistorial.subHistorico.totalConsumo;
+
+    historicoPorHora_copy.push({ hora: getHoraFecha(consumoReal.fecha_consumo), consumo: consumoRealDia - totalConsumo_copy });
+    totalConsumo_copy = consumoRealDia;
+
+    return {
+        historicoPorHora: historicoPorHora_copy,
+        totalConsumo: totalConsumo_copy
+    };
+}
+
 const ControladorConsumo = {};
 
 ControladorConsumo.eliminarClienteAlerta = async (correo) => {
@@ -183,7 +198,7 @@ ControladorConsumo.enviarConsumoReal = (cliente, res, ultimoConsumo, req, costoU
                         consumo: 0,
                         costo: 0,
                         mensaje: "",
-                        fecha: new Date().toLocaleString('en-us', { hour12: true }),
+                        fecha: new Date().toLocaleString('en-us', { hour12: true, timeZone: "America/Bogota" }),
                         tipoLimite: limite.tipoLimite
                     }
                     let historico = limite.historico ? limite.historico : [];
@@ -387,7 +402,7 @@ ControladorConsumo.sumarDiasFecha = (fecha, Ndia) => {
     let mes = parseInt((nuevaFecha.getMonth() + 1));
     let dia = parseInt(nuevaFecha.getDate());
 
-    return  mes + '/' + dia + "/" + nuevaFecha.getFullYear();
+    return mes + '/' + dia + "/" + nuevaFecha.getFullYear();
 }
 
 //Metodo encargado de validar la veracidad del consumo que envia el medidor, guardar un consumo llamado consumoReal y de solicitar el registro en el historial.
@@ -418,7 +433,7 @@ ControladorConsumo.registrarConsumoReal = async function (body, res, req, costoU
             nuevoConsumoReal.consumoMes = body['consumoTotal'];
             nuevoConsumoReal.id_medidor = body['id_medidor'];
             nuevoConsumoReal.totalConsumo = 0;
-            
+
             let resultadoActualizacionFechaPeriodo = true;
 
             //verificar si es un nuevo periodo
@@ -428,7 +443,7 @@ ControladorConsumo.registrarConsumoReal = async function (body, res, req, costoU
                     console.log("Existen fechas personalizadas por el admiistrador...")
                     nuevoConsumoReal.fechaFinalCorte = fechaProxFinalPeriodo;
                     nuevoConsumoReal.fechaInicialCorte = fechaProxInicialPeriodo;
-                }else{
+                } else {
                     nuevoConsumoReal.fechaFinalCorte = this.sumarDiasFecha(fechaFinCorte, 31);
                     nuevoConsumoReal.fechaInicialCorte = fechaFinCorte;
                 }
@@ -439,7 +454,7 @@ ControladorConsumo.registrarConsumoReal = async function (body, res, req, costoU
                 nuevoConsumoReal.fechaFinalCorte = fechaFinCorte;
                 nuevoConsumoReal.fechaInicialCorte = fechaIniCorte;
             }
-            
+
             if (resultadoActualizacionFechaPeriodo === true) {
                 //Se intenta guardar el objeto creado
                 console.log("Intentado guardar el consumoReal...");
@@ -498,15 +513,15 @@ ControladorConsumo.registrarConsumoReal = async function (body, res, req, costoU
                 //de no sobreescribir las fechas, ni tomar posibles fechas proximas como las actuales, debido a
                 //puedieron ser alteradas o ya no son las que debia tomar.
 
-                if(consumoReal.fechaInicialCorte !== fechaIniCorte){//Ya esta actualizado las fechas del sistema
+                if (consumoReal.fechaInicialCorte !== fechaIniCorte) {//Ya esta actualizado las fechas del sistema
                     consumoReal.fechaFinalCorte = fechaFinCorte;
                     consumoReal.fechaInicialCorte = fechaIniCorte;
-                }else{
+                } else {
                     if (fechaProxInicialPeriodo && fechaProxFinalPeriodo) {
                         console.log("Existen fechas personalizadas por el admiistrador...")
                         consumoReal.fechaFinalCorte = fechaProxFinalPeriodo;
                         consumoReal.fechaInicialCorte = fechaProxInicialPeriodo;
-                    }else{
+                    } else {
                         consumoReal.fechaFinalCorte = this.sumarDiasFecha(consumoReal.fechaFinCorte, 31);
                         consumoReal.fechaInicialCorte = consumoReal.fechaFinCorte;
                     }
@@ -647,7 +662,8 @@ ControladorConsumo.registrarConsumoHistorial = async function (ConsumoReal, cost
             const arregloHoraCR = arregloFechaCR[1].split(" ");
             let actualizacion = {};
             let contError = 0;
-            const consumoRealDia = ConsumoReal.consumoMes - ultimoHistorial.consumoDiasAnteriores;
+            const consumoRealDia = ConsumoReal.consumoMes - ultimoHistorial.consumoDiasAnteriores;   
+            actualizacion.subHistorico = getActualizacionSubHistorico(ultimoHistorial, ConsumoReal, consumoRealDia);
             console.log("Esta es la jornada => " + arregloHoraCR[2]);
             //arregloHoraCR[2] = "PM" para el ejemplo
             if (arregloHoraCR[2] === "AM") {//Se busca la jornada para calcular el consumo del dia. (Si ya existe un consumo en la jornada anterior se le debe restar... ej: si estas en la tarde se le debe restarlo consumido en la mañana y madrugada, si solo si, se cosumió en esas jornadas.)
@@ -856,7 +872,19 @@ ControladorConsumo.nuevoHistorial = function (consumoReal, historialAyer, costoU
             nuevoHistorial.fechaIniCorte = consumoReal.fechaInicialCorte;
         }
         consumoRealDia = consumoReal.consumoMes - nuevoHistorial.consumoDiasAnteriores;
-
+        nuevoHistorial.subHistorico = {
+            historicoPorHora: [
+                { hora: getHoraFecha(consumoReal.fecha_consumo), consumo: consumoRealDia }
+            ],
+            totalConsumo: consumoRealDia
+        }
+    } else {//Se registra la hora de consumo en el subHistorico
+        nuevoHistorial.subHistorico = {
+            historicoPorHora: [
+                { hora: getHoraFecha(consumoReal.fecha_consumo), consumo: consumoReal.consumoMes }
+            ],
+            totalConsumo: consumoReal.consumoMes
+        }
     }
 
     //arregloHora[2] = "PM" para el ejemplo anterior.
